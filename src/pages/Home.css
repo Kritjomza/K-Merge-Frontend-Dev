@@ -1,0 +1,92 @@
+@import "../components/navbar.css"; 
+
+*/
+
+.km-home {
+  background: #fff;
+  min-height: 100vh;
+  width: 100vw;                 /* ✅ ให้เต็มความกว้างของ viewport */
+  overflow-x: hidden;           /* ป้องกัน scroll แนวนอน */
+  color: var(--km-text);
+}
+
+/* ===== Hero ===== */
+.km-hero {
+  background: linear-gradient(to bottom, #fbe5c2, #fdd78a);
+  text-align: center;
+  width: 100vw;                 /* ✅ ขยายเต็มจอ */
+  height: 100vh;                /* ✅ สูงเต็มจอ */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;            /* ลด padding เพื่อไม่ให้มีขอบขาว */
+  margin: 0;                    /* ป้องกันการเหลื่อมของ layout */
+}
+
+.km-hero__content {
+  max-width: 60rem;            /* กำหนดความกว้างสูงสุด */
+  width: 100%;
+  margin: 0 auto;
+}
+
+.km-hero__content { max-width:42rem; margin:0 auto; }
+.km-hero__title { font-size:clamp(2.25rem,5vw,3rem); font-weight:800; margin-bottom:.5rem; color:#171717; }
+.km-hero__desc { font-size:1.05rem; color:#3c3c3c; margin-bottom:1.75rem; }
+
+/* Search bar */
+.km-search {
+  display:grid;
+  grid-template-columns: 1fr 48px; /* <-- ปรับเหลือ 2 คอลัมน์ */
+  gap:8px; align-items:center;
+  max-width:28rem; margin:0 auto;
+}
+.km-search__input{
+  padding:.75rem 1rem; border:1px solid var(--km-border);
+  border-radius: var(--km-radius-pill); /* pill เต็มสวยกว่า */
+  outline:none; font-size:.95rem;
+}
+.km-search__btn{
+  background:var(--km-brand); color:#fff; border:none;
+  border-radius:50%; width:48px; height:48px;
+  display:grid; place-items:center; cursor:pointer; transition:filter .15s;
+}
+.km-search__btn:hover{ filter:brightness(.95); }
+
+/* ===== Explore Section ===== */
+.km-explore { padding:4rem var(--km-pad-x); background:#f9f9f9; }
+.km-explore__head { text-align:center; margin-bottom:2rem; }
+.km-explore__title { font-size:1.25rem; font-weight:700; color:var(--km-text); }
+.km-explore__subtitle { font-size:.9rem; color:var(--km-muted); }
+
+/* Grid */
+.km-grid{
+  display:grid; grid-template-columns: repeat(auto-fit, minmax(16rem,1fr));
+  gap:1.75rem; justify-items:center;
+}
+.km-card{
+  background:var(--km-surface); border:1px solid var(--km-border);
+  border-radius:var(--km-radius-lg); padding:1rem; width:100%; max-width:18rem;
+  box-shadow:0 4px 10px rgba(0,0,0,.03);
+  transition: transform .15s, box-shadow .15s;
+}
+.km-card:hover{ transform: translateY(-3px); box-shadow:0 6px 18px rgba(0,0,0,.06); }
+.km-card__img{
+  height:8rem; background:#f5f5f5; color:#aaa; border-radius:var(--km-radius-lg);
+  display:flex; align-items:center; justify-content:center; margin-bottom:.75rem;
+}
+.km-card__title{ font-weight:600; margin-bottom:.4rem; }
+.km-card__desc{ font-size:.875rem; color:var(--km-muted); }
+
+/* Pagination */
+.km-pagination{ display:flex; justify-content:center; gap:.75rem; margin-top:2rem; }
+.km-page-btn{
+  width:2.25rem; height:2.25rem; border-radius:50%;
+  border:1px solid var(--km-border); background:#fff; cursor:pointer; transition:background .15s;
+}
+.km-page-btn:hover{ background:#f4f4f4; }
+
+/* Responsive tweaks */
+@media (max-width:480px){
+  .km-hero__desc{ font-size:.95rem; }
+  .km-search__input{ font-size:.875rem; }
+}
