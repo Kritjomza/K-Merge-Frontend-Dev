@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import "./EditProfile.css";
-import logo from "../assets/logo.png"; // ✅ เพิ่ม import โลโก้
+import logo from "../assets/logo.png";
+import { FaTrash } from "react-icons/fa"; // 🗑️ เพิ่ม icon ถังขยะ
 
 export default function EditProfile() {
   const [avatar, setAvatar] = useState<string | null>(null);
@@ -13,6 +14,32 @@ export default function EditProfile() {
     setAvatar(URL.createObjectURL(file));
   };
 
+
+  type Platform = "facebook" | "instagram" | "x" | "linkedin" | "website";
+  const ALL_PLATFORMS: Record<Platform, { label: string; placeholder: string }> = {
+    facebook: { label: "Facebook", placeholder: "https://facebook.com/" },
+    instagram: { label: "Instagram", placeholder: "https://instagram.com/" },
+    x: { label: "X (Twitter)", placeholder: "https://twitter.com/" },
+    linkedin: { label: "LinkedIn", placeholder: "https://linkedin.com/in/" },
+    website: { label: "Website", placeholder: "https://yourwebsite.com/" },
+  };
+
+
+  const [links, setLinks] = useState<Platform[]>(["facebook", "instagram"]);
+
+  const addLink = (platform: Platform) => {
+    setLinks((prev) => [...prev, platform]);
+  };
+
+  const removeLink = (platform: Platform) => {
+    setLinks((prev) => prev.filter((p) => p !== platform));
+  };
+
+  const availablePlatforms = (Object.keys(ALL_PLATFORMS) as Platform[]).filter(
+    (p) => !links.includes(p)
+  );
+
+
   return (
     <div className="edit-bg">
       <div className="edit-container">
@@ -21,8 +48,12 @@ export default function EditProfile() {
           <img src={logo} alt="K-Merge logo" className="logo-img" />
         </div>
 
+        
+
         {/* กล่องฟอร์ม */}
         <div className="edit-card">
+            <h2 className="km-login__title">ข้อมูลบัญชี</h2>
+
           <div className="edit-avatar">
             <img
               src={avatar ?? "https://ui-avatars.com/api/?name=KM&background=F59E0B&color=fff"}
@@ -52,6 +83,50 @@ export default function EditProfile() {
 
             <label>ยืนยันรหัสผ่าน</label>
             <input type="password" placeholder="ยืนยันรหัสผ่าน" />
+
+            <label>เบอร์โทรศัพท์</label>
+            <input type="text" placeholder="09x-xxx-xxxx" />
+
+            <label>ช่องทางการติดต่อเพิ่มเติม</label>
+            <div className="contact-box">
+              {links.map((platform) => (
+                <div key={platform} className="contact-row">
+                  <label>{ALL_PLATFORMS[platform].label}</label>
+                  <input
+                    type="url"
+                    placeholder={ALL_PLATFORMS[platform].placeholder}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeLink(platform)}
+                    className="trash-btn"
+                  >
+                    <FaTrash size={14} />
+                  </button>
+                </div>
+              ))}
+
+              {availablePlatforms.length > 0 && (
+                <div className="add-contact">
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) addLink(e.target.value as Platform);
+                      e.target.value = "";
+                    }}
+                    defaultValue=""
+                  >
+                    <option value="" disabled>
+                      เพิ่มช่องทางการติดต่อ 
+                    </option>
+                    {availablePlatforms.map((p) => (
+                      <option key={p} value={p}>
+                        {ALL_PLATFORMS[p].label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
 
             <div className="edit-actions">
               <button type="button" className="cancel-btn">ยกเลิก</button>

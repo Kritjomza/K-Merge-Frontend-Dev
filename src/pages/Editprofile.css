@@ -1,10 +1,50 @@
-/* --- พื้นหลังหลัก --- */
-.edit-bg {
-  background-color: #fce1d1;
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Prompt", system-ui, -apple-system, Segoe UI, Roboto,
+    "Helvetica Neue", Arial, "Noto Sans Thai", sans-serif;
+}
+
+/* พื้นหลัง + จัดให้อยู่กลางจอทั้งหมด */
+body,
+.km-login {
+  background-color: #ffe3d2;
   min-height: 100vh;
+
+  /* ใช้ flex จัดกลางทั้งแนวตั้งและแนวนอน */
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center; /* แนวตั้ง */
+  align-items: center; /* แนวนอน */
+}
+
+
+
+/* Card Container */
+.km-login__card {
+  background-color: #fff;
+  border: 2px solid #d7e4ff;
+  border-radius: 12px;
+  padding: 40px 40px 50px;
+  width: 360px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+  /* เพิ่มขอบเขตระยะห่างจากโลโก้ */
+  margin-top: 10px;
+}
+
+/* Title */
+.km-login__title {
+  text-align: center;
+  color: #333;
+  margin-bottom: 24px;
+}
+
+/* Form Fields */
+.km-login__field {
+  margin-bottom: 16px;
 }
 
 /* --- กล่องรวม --- */
@@ -12,12 +52,21 @@
   text-align: center;
 }
 
+
 /* โลโก้ */
 .edit-logo {
-  font-size: 36px;
-  font-weight: 900;
-  color: #f57c00;
-  margin-bottom: 20px;
+    display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: -100px; 
+}
+
+.logo-img {
+  width: 400px;       /* หรือขนาดที่ต้องการ */
+  height: auto;
+  object-fit: contain; /* ป้องกันภาพยืด */
+  display: block;
 }
 
 .highlight {
@@ -30,7 +79,7 @@
   padding: 40px;
   border-radius: 20px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-  width: 500px;
+  width: 600px;
   margin: 0 auto;
 }
 
@@ -116,4 +165,61 @@
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
+}
+
+
+.contact-box {
+  background: #f8f8f8;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.contact-row label {
+  width: 80px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.contact-row input {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+
+.trash-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+}
+
+.trash-btn:hover {
+  color: #d33;
+}
+
+.add-contact select {
+  background-color: #f5820b;   
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;            
+  transition: background-color 0.2s ease;
+}
+
+.add-contact select:hover {
+  background-color: #e06f00;   
 }
