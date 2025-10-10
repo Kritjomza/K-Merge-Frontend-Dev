@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import "./profile.css";
 import Navbar from "../components/Navbar";
+import { Link } from "react-router-dom";
 
 type UserProfile = {
   id: string;
@@ -91,9 +92,9 @@ export default function Profile() {
         <div className="profile-card">
           {/* ===== Left card ===== */}
           <aside className="profile-left">
-            <button type="button" className="edit-btn">
-              Edit
-            </button>
+            <Link to="/edit-profile">
+            <button className="edit-btn">Edit</button>
+            </Link>
 
             <div
               className="avatar-wrap"
