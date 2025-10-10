@@ -1,4 +1,4 @@
-/* Reset */
+/* ===== Reset & font ===== */
 * {
   margin: 0;
   padding: 0;
@@ -7,32 +7,21 @@
     "Helvetica Neue", Arial, "Noto Sans Thai", sans-serif;
 }
 
-/* พื้นหลัง + จัดให้อยู่กลางจอทั้งหมด */
-body,
-.km-login {
-  background-color: #ffe3d2;
-  min-height: 100vh;
-
-  /* ใช้ flex จัดกลางทั้งแนวตั้งและแนวนอน */
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* แนวตั้ง */
-  align-items: center; /* แนวนอน */
+/* ===== Page background ===== */
+html, body { height: 100%; }
+body {
+  background: #ffe3d2;     /* ให้พื้นหลังกลืนทั้งหน้า */
 }
 
-
-
-/* Card Container */
-.km-login__card {
-  background-color: #fff;
-  border: 2px solid #d7e4ff;
-  border-radius: 12px;
-  padding: 40px 40px 50px;
-  width: 360px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-
-  /* เพิ่มขอบเขตระยะห่างจากโลโก้ */
-  margin-top: 10px;
+/* ===== Page wrapper (ถ้ามี) ===== */
+/* ใส้คลาส .edit-container ครอบทั้งหน้าไว้ */
+.edit-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 16px 32px;
+  background: #ffe3d2;     /* สีเดียวกับ body */
 }
 
 /* Title */
@@ -41,17 +30,6 @@ body,
   color: #333;
   margin-bottom: 24px;
 }
-
-/* Form Fields */
-.km-login__field {
-  margin-bottom: 16px;
-}
-
-/* --- กล่องรวม --- */
-.edit-container {
-  text-align: center;
-}
-
 
 /* โลโก้ */
 .edit-logo {
@@ -91,10 +69,10 @@ body,
 
 /* ส่วนโปรไฟล์ */
 .edit-avatar {
-  display: flex;
-  flex-direction: column;
+  display: flex !important;            /* กันโดน style อื่น override */
+  flex-direction: column !important;   /* รูปบน ปุ่มใต้ */
   align-items: center;
-  gap: 10px; /* ระยะห่างระหว่างรูปกับปุ่ม */
+  gap: 12px;
   margin-bottom: 20px;
 }
 
@@ -117,6 +95,8 @@ body,
   border-radius: 12px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  position: static !important;   /* กันเคสถูกจัด absolute จากที่อื่น */
+  float: none !important;
 }
 
 .edit-btn:hover {

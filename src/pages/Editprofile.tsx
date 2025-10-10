@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import "./EditProfile.css";
 import logo from "../assets/logo.png";
 import { FaTrash } from "react-icons/fa"; // 🗑️ เพิ่ม icon ถังขยะ
+import Navbar from "../components/Navbar";
 
 export default function EditProfile() {
   const [avatar, setAvatar] = useState<string | null>(null);
@@ -59,9 +60,11 @@ export default function EditProfile() {
               src={avatar ?? "https://ui-avatars.com/api/?name=KM&background=F59E0B&color=fff"}
               alt="avatar"
             />
+
             <button type="button" className="edit-btn" onClick={handlePickImage}>
               edit picture
             </button>
+
             <input
               ref={fileInputRef}
               type="file"
