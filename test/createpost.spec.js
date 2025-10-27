@@ -25,4 +25,6 @@ test('create post', async ({ page }) => {
   await page.getByRole('button', { name: 'สร้างโพส' }).click();
 
   await page.waitForURL(/\/works\/[a-z0-9-]+$/);
+  await expect(page).toHaveURL(/\/works\/[a-z0-9-]+$/);
+  await expect(page.locator('h1')).toContainText('Test');
 });
