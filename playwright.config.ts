@@ -25,5 +25,6 @@ export default defineConfig({
     url: 'http://localhost:5173',     
     timeout: 120 * 1000,              
     reuseExistingServer: !process.env.CI,
+    env: { NO_PROXY: '1' },
   },
 });

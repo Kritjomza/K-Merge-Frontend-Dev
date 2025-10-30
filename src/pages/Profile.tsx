@@ -4,6 +4,7 @@ import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import "./profile.css";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../contexts/AuthContext";
+import { apiGet } from "../lib/api";
 type TabKey = "saved" | "posts";
 
 type Card = {
@@ -14,8 +15,11 @@ type Card = {
   thumb?: string | null;
 };
 
+type TagItem = { tagId?: string; name: string };
+type EditMedia = { id?: string; dataUrl?: string; previewUrl: string; alttext?: string };
+
 export default function Profile() {
-  const { user, loading } = useAuth();
+  const { user, loading, refetchUser } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("saved");
@@ -33,6 +37,18 @@ export default function Profile() {
     []
   );
   const [posts, setPosts] = useState<Card[]>([]);
+  const [editing, setEditing] = useState<null | {
+    id: string | number;
+    title: string;
+    excerpt: string;
+    status: 'draft' | 'published';
+    tags: TagItem[];
+    media: EditMedia[];
+  }>(null);
+  const [busy, setBusy] = useState<boolean>(false);
+  const [tagQuery, setTagQuery] = useState("");
+  const [tagSuggestions, setTagSuggestions] = useState<TagItem[]>([]);
+  const imagePickerRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     (async () => {
       try {
@@ -69,7 +85,37 @@ export default function Profile() {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setAvatarPreview(url);
-    // TODO: upload -> Supabase Storage, then update profile avatar URL
+    // Upload to Supabase via backend, then refresh profile
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = String(reader.result || '');
+      if (!dataUrl.startsWith('data:image')) return;
+      try {
+        const res = await fetch('/auth/me', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ avatar: dataUrl }),
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          console.error('Avatar update failed:', txt);
+        }
+        // Re-fetch profile to get signed avatar URL from server
+        try {
+          const profRes = await fetch('/auth/profile', { credentials: 'include' });
+          if (profRes.ok) setProfile(await profRes.json());
+          // also refresh global auth context so Navbar gets updated avatar
+          await refetchUser();
+        } catch {}
+      } catch (err) {
+        console.error('Failed to upload avatar', err);
+      } finally {
+        // clear the input value to allow re-uploading same file later
+        if (e.currentTarget) e.currentTarget.value = '';
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   if (loading) {
@@ -120,6 +166,156 @@ export default function Profile() {
     user.user_metadata?.bio ||
     "Tell people who you are, what you are building, and what you are excited about.";
   const activeList = tab === "saved" ? saved : posts;
+
+  const onDelete = async (id: string | number) => {
+    if (!confirm('Delete this post? This cannot be undone.')) return;
+    try {
+      setBusy(true);
+      const res = await fetch(`/works/${id}`, { method: 'DELETE', credentials: 'include' });
+      if (!res.ok) {
+        const txt = await res.text();
+        alert(txt || 'Failed to delete');
+        return;
+      }
+      setPosts(prev => prev.filter(p => p.id !== id));
+    } catch (e: any) {
+      alert(e?.message || 'Failed to delete');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const startEdit = async (item: Card) => {
+    try {
+      setBusy(true);
+      const detail = await apiGet<any>(`/works/${item.id}`);
+      const media: EditMedia[] = (detail.media || []).map((m: any) => ({
+        id: m.id,
+        previewUrl: m.fileurl,
+        alttext: m.alttext || '',
+      }));
+      setEditing({
+        id: item.id,
+        title: detail.title || item.title,
+        excerpt: detail.description || item.excerpt || '',
+        status: (detail.status as 'draft' | 'published') || 'draft',
+        tags: (detail.tags || []).map((t: any) => ({ tagId: t.tagId, name: t.name })),
+        media,
+      });
+    } catch (e: any) {
+      alert(e?.message || 'Failed to load work');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    const { id, title, excerpt, status, tags, media } = editing;
+    if (!String(title).trim()) {
+      alert('Title is required');
+      return;
+    }
+    try {
+      setBusy(true);
+      const body: any = {
+        title: title.trim(),
+        description: excerpt,
+        status,
+        tagIds: tags.filter(t => !!t.tagId).map(t => t.tagId),
+        newTags: tags.filter(t => !t.tagId).map(t => t.name),
+        media: media.map(m => (m.dataUrl ? { dataUrl: m.dataUrl, alttext: m.alttext } : { id: m.id, alttext: m.alttext })),
+      };
+      const res = await fetch(`/works/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        alert(txt || 'Failed to update');
+        return;
+      }
+      const fresh = await apiGet<any>(`/works/${id}`);
+      setPosts(prev => prev.map(p => (p.id === id ? {
+        ...p,
+        title: fresh.title || title,
+        excerpt: fresh.description || excerpt,
+        tags: (fresh.tags || []).map((t: any) => t.name),
+        thumb: fresh.thumbnail || (editing.media[0]?.previewUrl || null),
+      } : p)));
+      setEditing(null);
+    } catch (e: any) {
+      alert(e?.message || 'Failed to update');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // --- Tag suggestions (debounced) ---
+  useEffect(() => {
+    let cancelled = false;
+    const h = setTimeout(async () => {
+      if (!tagQuery.trim()) {
+        setTagSuggestions([]);
+        return;
+      }
+      try {
+        const res = await fetch(`/works/meta/tags?q=${encodeURIComponent(tagQuery)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setTagSuggestions((data || []).map((t: any) => ({ tagId: t.tagId, name: t.name })));
+      } catch {}
+    }, 200);
+    return () => { cancelled = true; clearTimeout(h); };
+  }, [tagQuery]);
+
+  const addTagByName = (name: string) => {
+    if (!editing) return;
+    const n = name.trim();
+    if (!n) return;
+    if (editing.tags.some(t => t.name.toLowerCase() === n.toLowerCase())) return;
+    const existing = tagSuggestions.find(s => s.name.toLowerCase() === n.toLowerCase());
+    setEditing({ ...editing, tags: [...editing.tags, existing || { name: n }] });
+    setTagQuery("");
+    setTagSuggestions([]);
+  };
+  const removeTag = (name: string) => {
+    if (!editing) return;
+    setEditing({ ...editing, tags: editing.tags.filter(t => t.name !== name) });
+  };
+
+  // --- Media helpers ---
+  const onPickEditImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!editing) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    files.forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result);
+        setEditing((prev) => prev ? ({
+          ...prev,
+          media: [...prev.media, { dataUrl, previewUrl: dataUrl, alttext: f.name }],
+        }) : prev);
+      };
+      reader.readAsDataURL(f);
+    });
+    e.currentTarget.value = "";
+  };
+  const removeMedia = (idx: number) => {
+    if (!editing) return;
+    setEditing({ ...editing, media: editing.media.filter((_, i) => i !== idx) });
+  };
+  const setAsThumbnail = (idx: number) => {
+    if (!editing) return;
+    if (idx === 0) return;
+    const next = [...editing.media];
+    const [itm] = next.splice(idx, 1);
+    next.unshift(itm);
+    setEditing({ ...editing, media: next });
+  };
 
   return (
     <>
@@ -237,6 +433,12 @@ export default function Profile() {
                           <span className="tag" key={t}>{t}</span>
                         ))}
                       </div>
+                      {tab === 'posts' && (
+                        <div className="card-actions">
+                          <button className="btn-mini" onClick={() => startEdit(item)} disabled={busy}>Edit</button>
+                          <button className="btn-mini danger" onClick={() => onDelete(item.id)} disabled={busy}>Delete</button>
+                        </div>
+                      )}
                     </div>
                   </article>
                 ))}
@@ -245,6 +447,88 @@ export default function Profile() {
               <div className="empty-state">
                 <h3>No {tab === "saved" ? "saved items" : "posts"} yet</h3>
                 <p>Start exploring and share your work to see it here.</p>
+              </div>
+            )}
+            {editing && (
+              <div className="modal-backdrop" role="dialog" aria-modal="true">
+                <div className="modal">
+                  <h3 className="modal-title">Edit Work</h3>
+
+                  <div className="edit-grid">
+                    <div className="edit-col">
+                      <label className="modal-label">Title</label>
+                      <input className="modal-input" value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+
+                      <label className="modal-label">Description</label>
+                      <textarea className="modal-textarea" rows={6} value={editing.excerpt} onChange={(e) => setEditing({ ...editing, excerpt: e.target.value })} />
+
+                      <label className="modal-label">Status</label>
+                      <select className="modal-input" value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as any })}>
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                      </select>
+
+                      <label className="modal-label">Tags</label>
+                      <div className="edit-tags">
+                        <div className="taglist">
+                          {editing.tags.map(t => (
+                            <button key={t.name} type="button" className="chip" onClick={() => removeTag(t.name)} title="Remove tag">
+                              {t.name} <span aria-hidden>×</span>
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          className="modal-input"
+                          placeholder="Add tag and press Enter"
+                          value={tagQuery}
+                          onChange={(e) => setTagQuery(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTagByName(tagQuery); } }}
+                          aria-autocomplete="list"
+                          aria-expanded={tagSuggestions.length > 0}
+                        />
+                        {tagSuggestions.length > 0 && (
+                          <div className="suggest-box">
+                            {tagSuggestions.map(s => (
+                              <button key={s.tagId || s.name} type="button" className="suggest-item" onClick={() => addTagByName(s.name)}>
+                                {s.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="edit-col">
+                      <div className="media-head">
+                        <span>Images</span>
+                        <button className="btn-mini" onClick={() => imagePickerRef.current?.click()} disabled={busy}>Add Images</button>
+                        <input ref={imagePickerRef} type="file" accept="image/*" multiple className="hidden-file" onChange={onPickEditImages} />
+                      </div>
+                      <div className="edit-media-grid">
+                        {editing.media.map((m, i) => (
+                          <figure key={(m.id||'new')+i} className={`edit-media ${i===0 ? 'is-thumb' : ''}`}>
+                            <img src={m.previewUrl} alt={m.alttext || `image ${i+1}`} />
+                            <figcaption>{i===0 ? 'Thumbnail' : `Image ${i+1}`}</figcaption>
+                            <input className="modal-input" placeholder="Alt text" value={m.alttext || ''} onChange={(e) => {
+                              const next = [...editing.media];
+                              next[i] = { ...m, alttext: e.target.value };
+                              setEditing({ ...editing, media: next });
+                            }} />
+                            <div className="media-actions">
+                              <button className="btn-mini" onClick={() => setAsThumbnail(i)} disabled={busy}>Set as thumbnail</button>
+                              <button className="btn-mini danger" onClick={() => removeMedia(i)} disabled={busy}>Remove</button>
+                            </div>
+                          </figure>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal-actions">
+                    <button className="btn-mini" onClick={() => setEditing(null)} disabled={busy}>Cancel</button>
+                    <button className="btn-mini primary" onClick={saveEdit} disabled={busy}>Save</button>
+                  </div>
+                </div>
               </div>
             )}
           </section>

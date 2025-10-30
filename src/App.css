@@ -230,3 +230,29 @@ body{ color: var(--km-text); background: var(--km-bg); }
   .fade-in-up{ animation: none; }
   .km-search__btn, .km-chip, .km-card, .km-iconbtn{ transition: none; }
 }
+
+/* ======= Masonry (react-masonry-css) ======= */
+.km-masonry-grid{ display:flex; margin-left:-16px; width:auto; }
+.km-masonry-grid__column{ padding-left:16px; background-clip:padding-box; }
+.km-masonry-grid__column > .km-card{ margin-bottom:16px; }
+
+/* ======= Card Media + Hover ======= */
+.km-card--hover .km-card__img{ transition: transform .35s ease, filter .25s ease; will-change: transform; }
+.km-card--hover:hover .km-card__img{ transform: scale(1.03); filter: saturate(1.02); }
+.km-card__media{ display:block; overflow:hidden; position:relative; background:#fff7ec; }
+.km-card__img{ width:100%; height:auto; display:block; border-bottom:1px solid rgba(0,0,0,.04); }
+
+/* ======= Card Meta ======= */
+.km-card__meta{ display:flex; align-items:center; gap:10px; margin: 6px 0 10px; }
+.km-card__avatar{ width:28px; height:28px; border-radius:999px; object-fit:cover; border:1px solid #eee; }
+.km-card__meta-info{ display:flex; flex-direction:column; line-height:1.1; }
+.km-card__author{ font-size:12px; font-weight:700; color:#111827; }
+.km-card__date{ font-size:11px; color: var(--km-muted); }
+
+/* ======= Chip Active Override (gradient) ======= */
+.km-chip.is-active{
+  background: linear-gradient(135deg, #eef3ff 0%, #ffffff 100%);
+  border-color: var(--chip-on-border);
+  color: #2a2f6b;
+  box-shadow: 0 1px 0 rgba(0,0,0,.02), 0 6px 14px rgba(64,90,255,.10) inset;
+}

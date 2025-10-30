@@ -9,8 +9,11 @@ interface User {
 }
 
 // Interface for the context's value
+type ProfileRow = { [key: string]: any } | null;
+
 interface AuthContextType {
   user: User | null;
+  profile: ProfileRow;
   loading: boolean;
   logout: () => Promise<void>;
   refetchUser: () => Promise<void>;
@@ -20,6 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<ProfileRow>(null);
   const [loading, setLoading] = useState(true);
 
   // Function to fetch the current user's status from the backend
@@ -38,10 +42,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       const data = await res.json();
-      setUser(data.user);
+      setUser(data.user || null);
+      setProfile(data.profile || null);
     } catch (error) {
       console.error("Error fetching user:", error);
       setUser(null);
+      setProfile(null);
     } finally {
       setLoading(false);
     }
@@ -77,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchUser]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, refetchUser: fetchUser }}>
+    <AuthContext.Provider value={{ user, profile, loading, logout, refetchUser: fetchUser }}>
       {children}
     </AuthContext.Provider>
   );

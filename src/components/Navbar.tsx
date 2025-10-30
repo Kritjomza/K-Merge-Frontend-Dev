@@ -8,7 +8,7 @@ import { FaUser, FaSignOutAlt } from "react-icons/fa";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { user, loading, logout } = useAuth();
+  const { user, profile, loading, logout } = useAuth();
   const menuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ export default function Navbar() {
 
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || "User";
   const initial = (displayName || "U").slice(0, 1).toUpperCase();
-  const avatarUrl = user?.user_metadata?.picture;
+  const avatarUrl = (profile as any)?.avatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
   return (
     <>

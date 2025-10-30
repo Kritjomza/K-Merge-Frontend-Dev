@@ -1,0 +1,41 @@
+:root{
+  --wv-line:#eaecf0; --wv-text:#0f172a; --wv-muted:#667085; --wv-brand:#f59e0b; --wv-bg:#ffffff;
+}
+
+.wv{ background: var(--wv-bg); }
+.wv-wrap{
+  width: min(1120px, 100%);
+  margin: 0 auto; padding: 20px 16px 32px;
+  display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
+}
+@media (max-width: 980px){ .wv-wrap{ grid-template-columns: 1fr; } }
+
+.wv-main{ min-width:0; }
+.wv-hero{ border:1px solid var(--wv-line); border-radius: 16px; overflow:hidden; background:#f3f4f6; }
+.wv-hero img{ width:100%; aspect-ratio:16/9; object-fit:cover; display:block; }
+.wv-blank{ width:100%; aspect-ratio:16/9; background:#f3f4f6; }
+
+.wv-thumbs{ display:flex; gap:10px; overflow:auto; padding:10px 2px 2px; }
+.wv-thumb{ border:none; padding:0; background:#fff; cursor:pointer; border-radius:10px; outline:1px solid var(--wv-line); }
+.wv-thumb img{ height:72px; width:120px; object-fit:cover; border-radius:10px; display:block; }
+.wv-thumb.is-active{ outline:2px solid var(--wv-brand); }
+
+.wv-side{ min-width:0; }
+.wv-breadcrumb{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--wv-muted); margin: 4px 0 10px; }
+.wv-link{ color:inherit; text-decoration:none; }
+.wv-link:hover{ color:#111; }
+.wv-title{ margin: 6px 0 8px; font-size: clamp(22px, 3.2vw, 32px); font-weight: 900; color: var(--wv-text); }
+.wv-tags{ display:flex; gap:8px; flex-wrap:wrap; margin: 6px 0 14px; }
+.wv-tag{ font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--wv-line); background:#fff; }
+.wv-desc{ line-height: 1.75; color:#1f2937; background:#fff; border:1px solid var(--wv-line); border-radius: 14px; padding: 14px 16px; }
+.wv-actions{ margin-top: 16px; }
+.wv-btn{ display:inline-flex; align-items:center; gap:8px; border:1px solid var(--wv-line); border-radius:10px; padding:8px 12px; color:#111; text-decoration:none; background:#fff; font-weight:700; }
+.wv-btn:hover{ border-color:#ffd9a6; box-shadow:0 8px 20px rgba(245,124,0,.10); }
+
+/* Skeletons and errors */
+.wv-skeleton{ width:100%; aspect-ratio:16/9; border-radius:16px; background:linear-gradient(90deg,#f3f4f6, #e5e7eb, #f3f4f6); background-size:200% 100%; animation: wv-shimmer 1.4s infinite; }
+.wv-side__skeleton{ height:20px; border-radius:8px; background:linear-gradient(90deg,#f3f4f6, #e5e7eb, #f3f4f6); background-size:200% 100%; animation: wv-shimmer 1.4s infinite; margin-bottom:10px; }
+.wv-side__skeleton.sm{ width:60%; height:16px; }
+.wv-error{ width:min(1120px,100%); margin:0 auto; padding:24px 16px; color:#b91c1c; }
+
+@keyframes wv-shimmer{ 0%{ background-position:0 0 } 100%{ background-position:200% 0 } }
