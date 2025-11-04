@@ -18,8 +18,10 @@ export default function Login() {
 
   // Function for Google Sign-In
   const signInWithGoogle = () => {
-    // This will be proxied by Vite to your backend
-    window.location.href = `/auth/login`;
+    // In production, we must redirect to the backend domain.
+    const API_BASE = (import.meta as any).env?.VITE_API_BASE as string | undefined;
+    const url = API_BASE ? `${API_BASE}/auth/login` : `/auth/login`;
+    window.location.href = url;
   };
 
   // Function for Email/Password Login
