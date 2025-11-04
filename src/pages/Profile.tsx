@@ -369,7 +369,7 @@ export default function Profile() {
                 <span>Email</span>
                 <strong title={user.email || ""}>{user.email || "â€”"}</strong>
               </div>
-              <div className="meta-item"><span>Member since</span><strong>{new Date(user.created_at).toLocaleDateString()}</strong></div>
+              <div className="meta-item"><span>Member since</span><strong>{user.created_at ? new Date(user.created_at).toLocaleDateString() : "-"}</strong></div>
             </div>
 
             <div className="bio-left">
