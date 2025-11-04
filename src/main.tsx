@@ -14,6 +14,38 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./index.css";
 
+// Prefix API calls in production if VITE_API_BASE is set
+(() => {
+  const API_BASE = (import.meta as any).env?.VITE_API_BASE as string | undefined;
+  if (!API_BASE) return;
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    try {
+      const onlyRewrite = (url: string) => url.startsWith('/auth') || url.startsWith('/works');
+      if (typeof input === 'string') {
+        const url = input;
+        if (url.startsWith('/') && onlyRewrite(url)) {
+          return originalFetch(`${API_BASE}${url}`, init);
+        }
+        return originalFetch(input, init);
+      } else if (input instanceof Request) {
+        const url = input.url;
+        // Only rewrite same-origin relative paths we care about
+        const u = new URL(url, window.location.origin);
+        if (u.origin === window.location.origin && onlyRewrite(u.pathname)) {
+          const next = new Request(`${API_BASE}${u.pathname}${u.search}`, input);
+          return originalFetch(next, init);
+        }
+        return originalFetch(input, init);
+      } else {
+        return originalFetch(input as any, init);
+      }
+    } catch {
+      return originalFetch(input as any, init);
+    }
+  };
+})();
+
 const router = createBrowserRouter([
   { path: "/", element: <App /> },
   { path: "/login", element: <Login /> },
