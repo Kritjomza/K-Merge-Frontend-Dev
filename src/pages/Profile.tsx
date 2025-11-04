@@ -13,6 +13,9 @@ type Card = {
   excerpt: string;
   tags: string[];
   thumb?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  status?: 'draft' | 'published';
 };
 
 type TagItem = { tagId?: string; name: string };

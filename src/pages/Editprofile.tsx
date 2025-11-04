@@ -29,10 +29,10 @@ export default function EditProfile() {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }, [email]);
   const fullNameValid = useMemo(() => fullName.trim().length >= 2, [fullName]);
-  const _usernameValid = useMemo(() => {
-    const l = username.trim().length;
-    return l === 0 || l >= 2;
-  }, [username]);
+  // const _usernameValid = useMemo(() => {
+  //   const l = username.trim().length;
+  //   return l === 0 || l >= 2;
+  // }, [username]);
   const aboutValid = useMemo(() => {
     const l = aboutMe.trim().length;
     return l === 0 || l >= 10;
