@@ -1,10 +1,13 @@
 // src/contexts/AuthContext.tsx
-import { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import type { ReactNode } from 'react';
+
 
 // Interface for the user object we expect from Supabase
 interface User {
   id: string;
   email?: string;
+  created_at?: string;
   user_metadata?: { [key: string]: any };
 }
 
