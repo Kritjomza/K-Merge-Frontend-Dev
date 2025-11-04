@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 import Masonry from "react-masonry-css";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiChevronLeft, FiChevronRight, FiTag, FiX, FiImage, FiSearch } from "react-icons/fi";
