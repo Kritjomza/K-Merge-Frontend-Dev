@@ -1,6 +1,6 @@
 /* ---- Palette & Metrics ---- */
 :root {
-  --km-brand:        #e69525;
+  --km-brand:        #a95300;
   --km-text:         #171717;
   --km-muted:        #6f6f6f;
   --km-border:       #e9e9e9;
@@ -9,8 +9,8 @@
   --km-radius-lg:    0.75rem;
   --km-radius-pill:  999rem;
 
-  --km-nav-h:        4rem;
-  --km-pad-x:        clamp(1rem, 3vw, 1.5rem);
+  --km-nav-h:        5rem;
+  --km-pad-x:        clamp(1.5rem, 4vw, 2rem);
 
   --km-shadow-sm:    0 1px 2px rgba(0,0,0,.04);
   --km-shadow-md:    0 8px 28px rgba(0,0,0,.08);
@@ -41,17 +41,24 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  backdrop-filter: saturate(120%) blur(10px);
-  -webkit-backdrop-filter: saturate(120%) blur(10px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform .28s ease, box-shadow .28s ease;
+}
+
+.km-nav.is-scrolled {
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
 }
 
 .km-nav__left,
-.km-nav__right {
+.km-nav__right,
+.km-nav__center {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
+
+.km-nav__center { justify-content: center; flex: 1 1 auto; }
+.km-nav__left { flex: 0 0 auto; }
+.km-nav__right { flex: 0 0 auto; }
 
 /* ---- Logo ---- */
 .km-logo {
@@ -63,12 +70,19 @@
 }
 
 .km-logo-img {
-  height: clamp(8rem, 18vw, 10rem);
+  height: clamp(5.0rem, 5vw, 3.8rem);
   width: auto;
   object-fit: contain;
   display: block;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease;
 }
+
+.km-iconbtn.km-navbtn{
+  width: 2.8rem; height: 2.8rem; display:inline-flex; align-items:center; justify-content:center;
+  border-radius: 999rem; border: 1px solid var(--km-border); background: var(--km-surface);
+  color: var(--km-text); box-shadow: var(--km-shadow-sm);
+}
+.km-iconbtn.km-navbtn:hover{ background: color-mix(in oklab, var(--km-brand) 8%, var(--km-surface)); }
 
 .km-logo:hover .km-logo-img,
 .km-logo:focus-visible .km-logo-img {
@@ -140,7 +154,7 @@
 
 /* ---- Avatar ---- */
 .km-avatar {
-  --size: 2.25rem;
+  --size: 2.75rem;
   width: var(--size);
   height: var(--size);
   border-radius: var(--km-radius-pill);
@@ -364,28 +378,22 @@
 
   .km-nav {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: auto;
+    left: 0; right: 0; bottom: 0; top: auto;
     border-bottom: 0;
     border-top: 1px solid var(--km-border);
-    padding: 0.5rem var(--km-pad-x);
-    z-index: 100;
+    background: var(--km-surface);
+    padding: 0.5rem max(env(safe-area-inset-left), var(--km-pad-x)) calc(0.5rem + env(safe-area-inset-bottom)) max(env(safe-area-inset-right), var(--km-pad-x));
+    z-index: 200;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
   }
 
-  .km-nav__left {
-    display: none;
-  }
+  .km-nav__left { display: flex; justify-content: flex-start; }
 
-  .km-nav__right {
-    width: 100%;
-    justify-content: center;
-  }
+  .km-nav__right { width: auto; margin-left: 0; display:flex; justify-content:flex-end; }
 
-  .km-logo-img {
-    height: clamp(7rem, 15vw, 8rem);
-  }
+  .km-logo-img { height: 3rem; }
 
   .km-btn {
     font-size: 0.875rem;

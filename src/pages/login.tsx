@@ -33,6 +33,7 @@ export default function Login() {
       const response = await fetch(`/auth/login/email`, { // Using proxy
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
 

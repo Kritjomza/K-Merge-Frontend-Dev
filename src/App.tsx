@@ -7,7 +7,6 @@ import { apiGet, type WorkListItem } from "./lib/api";
 import "./App.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-// no page-level Navbar here; other pages handle their own layout
 
 type Post = {
   id: string;
@@ -29,6 +28,7 @@ const breakpointColumns = {
 const POSTS_PER_PAGE = 12;
 
 export default function App() {
+  const [spot, setSpot] = useState<{x:number,y:number}>({x:50,y:50});
   const [activeTag, setActiveTag] = useState<Tag | null>(null);
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
@@ -99,10 +99,27 @@ export default function App() {
       <Navbar />
       <div className="km-wrap">
         {/* Hero - orange/white inside container */}
-        <section className="km-hero" aria-labelledby="hero-title">
+        <section
+          className="km-hero"
+          aria-labelledby="hero-title"
+          onMouseMove={(e) => {
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            setSpot({ x, y });
+          }}
+          style={{
+            // CSS variables for interactive light spot
+            ['--mx' as any]: `${spot.x}%`,
+            ['--my' as any]: `${spot.y}%`,
+          }}
+        >
+          <span className="km-hero__orb km-hero__orb--1" aria-hidden="true" />
+          <span className="km-hero__orb km-hero__orb--2" aria-hidden="true" />
           <div className="km-hero__inner fade-in-up">
             <h1 id="hero-title" className="km-hero__title">K-Merge Creative Hub</h1>
-            <p className="km-hero__subtitle">Explore KMUTT students' works in a clean orange/white Masonry layout.</p>
+            <p className="km-hero__subtitle">Discover amazing portfolios from KMUTT students. Showcase your
+              talent and explore innovative projects.</p>
             <form className="km-search" onSubmit={(e) => e.preventDefault()} role="search" aria-label="Search works">
               <input
                 className="km-search__input"
@@ -116,11 +133,11 @@ export default function App() {
           </div>
         </section>
 
-        <header className="km-section">
+        <header className="km-section" id="explore">
           <div className="km-section__head">
             <div>
               <h1 className="km-section__title">Explore Creative Posts</h1>
-              <p className="km-section__sub">Browse by tag and paginate through a modern masonry grid.</p>
+              <p className="km-section__sub">Browse by tag.</p>
             </div>
             <div className="km-controls">
               <button
