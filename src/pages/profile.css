@@ -168,6 +168,13 @@ html, body { margin:0; padding:0; height:100%; width:100%; background: var(--bg)
 .tag{
   font-size:11px; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#fff; color: var(--text);
 }
+.card-footer{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin-top:12px; font-size:12px; color: var(--muted);
+}
+.card-footer .btn-mini{
+  flex-shrink:0;
+}
 
 /* Card actions */
 .card-actions{ display:flex; gap:8px; margin-top:10px; }
@@ -188,6 +195,15 @@ html, body { margin:0; padding:0; height:100%; width:100%; background: var(--bg)
   background:#fff;
 }
 .loading{ color: var(--muted); }
+.alert{
+  border:1px solid #fecaca;
+  background:#fef2f2;
+  color:#b91c1c;
+  border-radius: var(--radius-md);
+  padding:12px 14px;
+  font-size:13px;
+  margin-bottom:12px;
+}
 
 /* Modal */
 .modal-backdrop{

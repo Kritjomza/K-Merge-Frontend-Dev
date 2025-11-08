@@ -33,6 +33,11 @@ export type WorkListItem = {
 };
 
 export type WorkDetail = WorkListItem & {
+  saveCount?: number;
+  authorId?: string;
+  publishedAt?: string | null;
+  updatedAt?: string | null;
+  created_at?: string | null;
   media: { id?: string; fileurl: string; filetype?: string; alttext?: string }[];
 };
 

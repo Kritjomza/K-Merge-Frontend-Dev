@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import "./profile.css";
@@ -16,6 +16,7 @@ type Card = {
   created_at?: string;
   updated_at?: string;
   status?: 'draft' | 'published';
+  savedAt?: string | null;
 };
 
 type TagItem = { tagId?: string; name: string };
@@ -27,18 +28,9 @@ export default function Profile() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("saved");
   const [profile, setProfile] = useState<any | null>(null);
-
-  const saved = useMemo<Card[]>(
-    () =>
-      Array.from({ length: 6 }).map((_, i) => ({
-        id: i + 1,
-        title: `Saved work #${i + 1}`,
-        excerpt:
-          "A bookmarked project you liked. Short description goes here for context.",
-        tags: i % 2 ? ["UI", "Figma"] : ["React", "Web"],
-      })),
-    []
-  );
+  const [saved, setSaved] = useState<Card[]>([]);
+  const [savedLoading, setSavedLoading] = useState<boolean>(false);
+  const [savedError, setSavedError] = useState<string | null>(null);
   const [posts, setPosts] = useState<Card[]>([]);
   const [editing, setEditing] = useState<null | {
     id: string | number;
@@ -53,11 +45,17 @@ export default function Profile() {
   const [tagSuggestions, setTagSuggestions] = useState<TagItem[]>([]);
   const imagePickerRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
+    let active = true;
     (async () => {
+      if (!user) {
+        setPosts([]);
+        return;
+      }
       try {
         const res = await fetch('/works/my', { credentials: 'include' });
-        if (!res.ok) return; // if not authenticated, leave empty
+        if (!res.ok) return;
         const works = await res.json();
+        if (!active) return;
         const mapped: Card[] = (works || []).map((w: any) => ({
           id: w.workId || w.id,
           title: w.title,
@@ -68,7 +66,52 @@ export default function Profile() {
         setPosts(mapped);
       } catch {}
     })();
-  }, []);
+    return () => { active = false; };
+  }, [user]);
+
+  const fetchSaved = useCallback(async () => {
+    if (!user) {
+      setSaved([]);
+      return;
+    }
+    setSavedLoading(true);
+    setSavedError(null);
+    try {
+      const res = await fetch('/works/saved', { credentials: 'include' });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || 'Unable to load saved works');
+      }
+      const works = await res.json();
+      const mapped: Card[] = (works || []).map((w: any) => ({
+        id: w.workId || w.id,
+        title: w.title,
+        excerpt: w.description || '',
+        tags: (w.tags || []).map((t: any) => t.name),
+        thumb: w.thumbnail || null,
+        created_at: w.created_at,
+        updated_at: w.updatedAt,
+        status: w.status,
+        savedAt: w.savedAt || w.saved_at || null,
+      }));
+      setSaved(mapped);
+    } catch (err: any) {
+      setSaved([]);
+      setSavedError(err?.message || 'Unable to load saved works');
+    } finally {
+      setSavedLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchSaved();
+  }, [fetchSaved]);
+
+  useEffect(() => {
+    if (tab === 'saved' && !saved.length && !savedLoading && !savedError) {
+      fetchSaved();
+    }
+  }, [tab, saved.length, savedLoading, savedError, fetchSaved]);
 
   // Load Profile row for display
   useEffect(() => {
@@ -169,6 +212,7 @@ export default function Profile() {
     user.user_metadata?.bio ||
     "Tell people who you are, what you are building, and what you are excited about.";
   const activeList = tab === "saved" ? saved : posts;
+  const showSavedSpinner = tab === 'saved' && savedLoading && saved.length === 0;
 
   const onDelete = async (id: string | number) => {
     if (!confirm('Delete this post? This cannot be undone.')) return;
@@ -320,6 +364,13 @@ export default function Profile() {
     setEditing({ ...editing, media: next });
   };
 
+  const formatSavedTimestamp = (value?: string | null) => {
+    if (!value) return 'recently';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return 'recently';
+    return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(d);
+  };
+
   return (
     <>
       <Navbar />
@@ -412,8 +463,13 @@ export default function Profile() {
               </button>
             </div>
 
-            {/* Grid cards */}
-            {activeList.length ? (
+            {tab === 'saved' && savedError && (
+              <div className="alert" role="alert">{savedError}</div>
+            )}
+
+            {showSavedSpinner ? (
+              <div className="loading">Loading saved works…</div>
+            ) : activeList.length ? (
               <div className="grid" aria-live="polite">
                 {activeList.map((item, i) => (
                   <article
@@ -432,14 +488,19 @@ export default function Profile() {
                       <h3 className="card-title">{item.title}</h3>
                       <p className="card-text">{item.excerpt}</p>
                       <div className="tags">
-                        {item.tags.map((t) => (
+                        {(item.tags || []).map((t) => (
                           <span className="tag" key={t}>{t}</span>
                         ))}
                       </div>
-                      {tab === 'posts' && (
+                      {tab === 'posts' ? (
                         <div className="card-actions">
                           <button className="btn-mini" onClick={() => startEdit(item)} disabled={busy}>Edit</button>
                           <button className="btn-mini danger" onClick={() => onDelete(item.id)} disabled={busy}>Delete</button>
+                        </div>
+                      ) : (
+                        <div className="card-footer">
+                          <span>Saved {formatSavedTimestamp(item.savedAt)}</span>
+                          <Link className="btn-mini primary" to={`/works/${item.id}`}>View work</Link>
                         </div>
                       )}
                     </div>
