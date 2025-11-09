@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaBookmark, FaRegBookmark, FaUsers } from 'react-icons/fa';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { apiGet } from '../lib/api';
@@ -160,6 +161,16 @@ export default function WorkView() {
     }
   };
 
+  const goPrevMedia = () => {
+    if (!mediaCount) return;
+    setActive(prev => (prev - 1 + mediaCount) % mediaCount);
+  };
+
+  const goNextMedia = () => {
+    if (!mediaCount) return;
+    setActive(prev => (prev + 1) % mediaCount);
+  };
+
   const toggleSave = async () => {
     if (!id) return;
     if (!user) {
@@ -247,10 +258,30 @@ export default function WorkView() {
                       {active + 1}/{mediaCount}
                     </span>
                   )}
+                  {mediaCount > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        className="wv-hero-nav prev"
+                        aria-label="Previous image"
+                        onClick={goPrevMedia}
+                      >
+                        <FiChevronLeft />
+                      </button>
+                      <button
+                        type="button"
+                        className="wv-hero-nav next"
+                        aria-label="Next image"
+                        onClick={goNextMedia}
+                      >
+                        <FiChevronRight />
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {mediaCount > 1 && (
-                  <div className="wv-media-rail" role="list">
+                  <div className="wv-media-grid" role="list">
                     {data.media!.map((m, i) => (
                       <button
                         key={m.id || m.fileurl}
