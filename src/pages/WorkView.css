@@ -16,10 +16,10 @@
 .wv-shell{
   width: min(1200px, 100%);
   margin: 0 auto;
-  padding: 32px 20px 0;
+  padding: clamp(18px, 4vw, 36px) clamp(14px, 5vw, 28px) clamp(40px, 6vw, 70px);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: clamp(16px, 3vw, 28px);
 }
 
 .wv-top{
@@ -27,6 +27,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .wv-back{
@@ -54,12 +55,14 @@
 
 .wv-layout{
   display: grid;
-  grid-template-columns: minmax(0,1.6fr) minmax(0,1fr);
-  gap: 32px;
+  grid-template-columns: minmax(0,1.45fr) minmax(0,1fr);
+  gap: clamp(18px, 3.5vw, 36px);
   align-items: flex-start;
 }
 @media (max-width: 1024px){
-  .wv-layout{ grid-template-columns: 1fr; }
+  .wv-layout{
+    grid-template-columns: 1fr;
+  }
 }
 
 .wv-card{
@@ -69,14 +72,14 @@
   box-shadow: 0 30px 60px rgba(15,23,42,0.12);
 }
 .wv-gallery{
-  padding: 24px;
+  padding: clamp(16px, 3vw, 26px);
   display: flex;
   flex-direction: column;
   gap: 18px;
   backdrop-filter: blur(8px);
 }
 .wv-panel{
-  padding: 32px;
+  padding: clamp(20px, 3.5vw, 34px);
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -92,9 +95,10 @@
 .wv-hero-frame img,
 .wv-blank{
   width: 100%;
-  height: clamp(300px, 45vw, 520px);
+  min-height: clamp(220px, 45vw, 520px);
   object-fit: cover;
   display: block;
+  aspect-ratio: 4 / 3;
 }
 .wv-blank{
   background: repeating-linear-gradient(135deg,#f0f1f7,#f0f1f7 12px,#eaecf6 12px,#eaecf6 24px);
@@ -117,6 +121,7 @@
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 6px;
+  scroll-snap-type: x proximity;
 }
 .wv-thumb{
   border: 1px solid var(--wv-line);
@@ -425,7 +430,7 @@
 }
 
 @media (max-width: 768px){
-  .wv-shell{ padding: 20px 14px 40px; }
+  .wv-shell{ padding: 18px 12px 48px; }
   .wv-top{ flex-direction: column; align-items: flex-start; }
   .wv-back{ width: 100%; justify-content: center; }
   .wv-tagline{ letter-spacing: 0.2em; }
@@ -433,7 +438,7 @@
   .wv-gallery,
   .wv-panel{ padding: 20px 18px; }
   .wv-hero-frame img,
-  .wv-blank{ height: clamp(220px, 60vw, 420px); }
+  .wv-blank{ min-height: clamp(200px, 65vw, 420px); }
   .wv-panel__header{ flex-direction: column; }
   .wv-save{ width: 100%; justify-content: center; }
   .wv-save-meta{ flex-wrap: wrap; }

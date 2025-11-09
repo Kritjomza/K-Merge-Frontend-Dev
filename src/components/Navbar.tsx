@@ -53,10 +53,10 @@ export default function Navbar() {
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || "User";
   const initial = (displayName || "U").slice(0, 1).toUpperCase();
   const avatarUrl = (profile as any)?.avatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
-  const navLinks = [
-    { label: "สำรวจผลงาน", path: "/" },
-    { label: "สร้างผลงาน", path: "/works/new", requiresAuth: true },
-  ];
+  // const navLinks = [
+  //   { label: "สำรวจผลงาน", path: "/" },
+  //   { label: "สร้างผลงาน", path: "/works/new", requiresAuth: true },
+  // ];
 
   return (
     <>
@@ -72,7 +72,7 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <div className="km-nav__links">
+        {/* <div className="km-nav__links">
           {navLinks.map(link => {
             if (link.requiresAuth && !user) return null;
             const isActive = location.pathname === link.path;
@@ -82,7 +82,7 @@ export default function Navbar() {
               </Link>
             );
           })}
-        </div>
+        </div> */}
 
         <div className="km-nav__actions">
           {!user && !loading && (
