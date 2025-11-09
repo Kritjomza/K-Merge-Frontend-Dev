@@ -1,7 +1,7 @@
 // src/components/Navbar.tsx
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FiMenu, FiX, FiUser, FiArrowUpRight } from "react-icons/fi";
+import { FiMenu, FiX, FiArrowUpRight } from "react-icons/fi";
 import { FaSignOutAlt } from "react-icons/fa";
 import logo from "../assets/logo.png";
 import "./navbar.css";
