@@ -1,7 +1,7 @@
 // src/components/Navbar.tsx
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FiMenu, FiX, FiArrowUpRight } from "react-icons/fi";
+import { FiArrowUpRight } from "react-icons/fi";
 import { FaSignOutAlt } from "react-icons/fa";
 import logo from "../assets/logo.png";
 import "./navbar.css";
@@ -9,7 +9,6 @@ import { useAuth } from "../contexts/AuthContext";
 
 export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, profile, loading, logout } = useAuth();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -18,7 +17,6 @@ export default function Navbar() {
 
   useEffect(() => {
     setProfileOpen(false);
-    setDrawerOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -30,7 +28,6 @@ export default function Navbar() {
     const onEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setProfileOpen(false);
-        setDrawerOpen(false);
       }
     };
     const onScroll = () => {
@@ -50,7 +47,6 @@ export default function Navbar() {
   const handleSignOut = async () => {
     await logout();
     setProfileOpen(false);
-    setDrawerOpen(false);
     navigate("/");
   };
 
@@ -66,14 +62,6 @@ export default function Navbar() {
     <>
       <nav className={`km-nav ${scrolled ? "is-scrolled" : ""}`} aria-label="Primary">
         <div className="km-nav__brand">
-          <button
-            className="km-nav__menu"
-            aria-label="Toggle menu"
-            aria-expanded={drawerOpen}
-            onClick={() => setDrawerOpen(v => !v)}
-          >
-            {drawerOpen ? <FiX /> : <FiMenu />}
-          </button>
           <Link
             to="/"
             className="km-logo"
@@ -158,47 +146,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <div className={`km-mobile-drawer ${drawerOpen ? "is-open" : ""}`}>
-        <div className="km-mobile-drawer__inner">
-          <div className="km-mobile-drawer__group">
-            {navLinks.map(link => {
-              if (link.requiresAuth && !user) return null;
-              const isActive = location.pathname === link.path;
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`km-mobile-link ${isActive ? "is-active" : ""}`}
-                  onClick={() => setDrawerOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </div>
-          <div className="km-mobile-drawer__group">
-            {!user ? (
-              <Link to="/login" className="km-mobile-link" onClick={() => setDrawerOpen(false)}>
-                เข้าสู่ระบบ
-              </Link>
-            ) : (
-              <>
-                <Link to="/works/new" className="km-mobile-link" onClick={() => setDrawerOpen(false)}>
-                  โพสต์งาน
-                </Link>
-                <Link to="/profile" className="km-mobile-link" onClick={() => setDrawerOpen(false)}>
-                  โปรไฟล์
-                </Link>
-                <button className="km-mobile-link km-mobile-link--logout" onClick={handleSignOut}>
-                  <FaSignOutAlt />
-                  Logout
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-      {(profileOpen || drawerOpen) && <div className="km-nav-overlay" onClick={() => { setProfileOpen(false); setDrawerOpen(false); }} />}
+      {profileOpen && <div className="km-nav-overlay" onClick={() => setProfileOpen(false)} />}
     </>
   );
 }
