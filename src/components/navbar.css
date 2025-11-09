@@ -28,128 +28,157 @@
   --km-shadow-lg:    0 20px 50px rgba(0,0,0,.8);
 }
 
-/* ---- Desktop Layout ---- */
+/* ---- Responsive Navbar Layout ---- */
 .km-nav {
-  height: var(--km-nav-h);
-  padding: 0 var(--km-pad-x);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  background: var(--km-surface);
-  border-bottom: 1px solid var(--km-border);
   position: sticky;
   top: 0;
-  z-index: 50;
-  transition: transform .28s ease, box-shadow .28s ease;
+  z-index: 90;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.5rem;
+  height: var(--km-nav-h);
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 12px 30px rgba(15,23,42,0.06);
+  transition: box-shadow 0.3s ease, background 0.3s ease;
 }
 
 .km-nav.is-scrolled {
-  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  background: rgba(255,255,255,0.98);
+  box-shadow: 0 18px 40px rgba(15,23,42,0.12);
 }
 
-.km-nav__left,
-.km-nav__right,
-.km-nav__center {
+.km-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.km-nav__menu {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--km-border);
+  background: var(--km-surface);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--km-text);
+  transition: all 0.2s ease;
+}
+
+.km-nav__menu:hover {
+  border-color: var(--km-brand);
+  color: var(--km-brand);
+}
+
+.km-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.km-logo-img {
+  height: clamp(2.5rem, 5vw, 3rem);
+  width: auto;
+  display: block;
+}
+
+.km-nav__links {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.km-navlink {
+  position: relative;
+  font-weight: 600;
+  color: var(--km-muted);
+  text-decoration: none;
+  padding: 0.4rem 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.km-navlink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.2rem;
+  height: 2px;
+  background: var(--km-brand);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.25s ease;
+}
+
+.km-navlink:hover {
+  color: var(--km-text);
+}
+
+.km-navlink.is-active {
+  color: var(--km-text);
+}
+
+.km-navlink.is-active::after {
+  transform: scaleX(1);
+}
+
+.km-nav__actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.km-nav__center { justify-content: center; flex: 1 1 auto; }
-.km-nav__left { flex: 0 0 auto; }
-.km-nav__right { flex: 0 0 auto; }
-
-/* ---- Logo ---- */
-.km-logo {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  line-height: 1;
-  position: relative;
-}
-
-.km-logo-img {
-  height: clamp(5.0rem, 5vw, 3.8rem);
-  width: auto;
-  object-fit: contain;
-  display: block;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s ease;
-}
-
-.km-iconbtn.km-navbtn{
-  width: 2.8rem; height: 2.8rem; display:inline-flex; align-items:center; justify-content:center;
-  border-radius: 999rem; border: 1px solid var(--km-border); background: var(--km-surface);
-  color: var(--km-text); box-shadow: var(--km-shadow-sm);
-}
-.km-iconbtn.km-navbtn:hover{ background: color-mix(in oklab, var(--km-brand) 8%, var(--km-surface)); }
-
-.km-logo:hover .km-logo-img,
-.km-logo:focus-visible .km-logo-img {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-}
-
-/* ---- Button ---- */
+/* ---- Buttons ---- */
 .km-btn {
-  --btn-h: 2.625rem;
-  --btn-pad-x: 1rem;
+  --btn-h: 2.5rem;
+  --btn-pad-x: 1.2rem;
   height: var(--btn-h);
   padding: 0 var(--btn-pad-x);
   border-radius: var(--km-radius-pill);
   font-weight: 600;
-  font-size: 0.9375rem;
+  font-size: 0.95rem;
   line-height: 1;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.4rem;
   text-decoration: none;
   cursor: pointer;
   border: 1px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.km-btn--ghost {
+  border-color: var(--km-border);
   background: transparent;
   color: var(--km-text);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
 }
 
-.km-btn::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: color-mix(in oklab, var(--km-brand) 10%, transparent);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s ease, height 0.6s ease;
+.km-btn--ghost:hover {
+  border-color: var(--km-brand);
+  color: var(--km-brand);
+  box-shadow: 0 10px 25px rgba(15,23,42,0.08);
 }
 
-.km-btn:active::before {
-  width: 300px;
-  height: 300px;
+.km-btn--primary {
+  background: linear-gradient(135deg, #ff9332, #f46b45);
+  color: #fff;
+  border: none;
+  box-shadow: 0 15px 30px rgba(244,107,69,0.3);
 }
 
-.km-btn:focus-visible {
-  outline: 3px solid var(--km-focus);
-  outline-offset: 2px;
-}
-
-.km-btn--minimal {
-  border-color: var(--km-border);
-  background: var(--km-surface);
-  box-shadow: var(--km-shadow-sm);
-}
-
-.km-btn--minimal:hover {
-  background: color-mix(in oklab, var(--km-surface) 85%, var(--km-border));
-  box-shadow: var(--km-shadow-md);
-  transform: translateY(-2px);
-}
-
-.km-btn--minimal:active {
-  transform: translateY(1px);
+.km-btn--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 35px rgba(244,107,69,0.32);
 }
 
 /* ---- Avatar ---- */
@@ -352,116 +381,115 @@
   background: color-mix(in oklab, #d97a1a 12%, transparent);
 }
 
-/* ---- Nav Overlay (untuk mobile) ---- */
+/* ---- Nav Overlay & Drawer ---- */
 .km-nav-overlay {
-  display: none;
   position: fixed;
-  top: 0;
+  inset: 0;
+  background: rgba(15,23,42,0.35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 80;
+}
+
+.km-mobile-drawer {
+  position: fixed;
+  top: var(--km-nav-h);
   left: 0;
   right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0);
-  z-index: 40;
-  animation: fade-in 0.2s ease;
+  transform: translateY(-120%);
+  background: rgba(255,255,255,0.98);
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+  box-shadow: 0 20px 50px rgba(15,23,42,0.15);
+  z-index: 85;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fade-in {
-  from { background: rgba(0, 0, 0, 0); }
-  to { background: rgba(0, 0, 0, 0.2); }
+.km-mobile-drawer.is-open {
+  transform: translateY(0);
 }
 
-/* ---- Mobile & Tablet Layout ---- */
-@media (max-width: 768px) {
-  :root {
-    --km-nav-h: 3.5rem;
-  }
+.km-mobile-drawer__inner {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
 
+.km-mobile-drawer__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.km-mobile-link {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,0.08);
+  background: rgba(249,250,251,0.9);
+  text-decoration: none;
+  color: var(--km-text);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.km-mobile-link.is-active {
+  border-color: var(--km-brand);
+  color: var(--km-brand);
+}
+
+.km-mobile-link--logout {
+  background: rgba(255,245,240,0.9);
+  color: #d9480f;
+  border-color: rgba(217,72,15,0.2);
+}
+
+/* ---- Responsive tweaks ---- */
+@media (max-width: 1024px) {
   .km-nav {
-    position: fixed;
-    left: 0; right: 0; bottom: 0; top: auto;
-    border-bottom: 0;
-    border-top: 1px solid var(--km-border);
-    background: var(--km-surface);
-    padding: 0.5rem max(env(safe-area-inset-left), var(--km-pad-x)) calc(0.5rem + env(safe-area-inset-bottom)) max(env(safe-area-inset-right), var(--km-pad-x));
-    z-index: 200;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
+    grid-template-columns: auto auto;
+    padding: 0 1rem;
   }
 
-  .km-nav__left { display: flex; justify-content: flex-start; }
+  .km-nav__links {
+    display: none;
+  }
 
-  .km-nav__right { width: auto; margin-left: 0; display:flex; justify-content:flex-end; }
+  .km-nav__menu {
+    display: inline-flex;
+  }
 
-  .km-logo-img { height: 3rem; }
-
-  .km-btn {
-    font-size: 0.875rem;
-    --btn-h: 2.375rem;
-    --btn-pad-x: 0.875rem;
+  .km-nav__actions .km-btn--ghost {
+    display: none;
   }
 
   .km-dropdown {
-    position: fixed;
-    bottom: calc(var(--km-nav-h) + 0.75rem);
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(90vw, 16rem);
-    top: auto;
-    animation: km-pop-mobile 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  @keyframes km-pop-mobile {
-    from {
-      transform: translateX(-50%) translateY(16px) scale(0.9);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(-50%) translateY(0) scale(1);
-      opacity: 1;
-    }
-  }
-
-  .km-dropdown::before {
-    top: auto;
-    bottom: -8px;
-    border-top: 1px solid var(--km-border);
-    border-left: 1px solid var(--km-border);
-    border-right: 0;
-    border-bottom: 0;
-  }
-
-  .km-nav-overlay {
-    display: block;
+    right: 0;
+    left: auto;
   }
 }
 
 @media (max-width: 480px) {
   :root {
     --km-pad-x: 0.75rem;
+    --km-nav-h: 3.75rem;
+  }
+
+  .km-btn {
+    --btn-h: 2.2rem;
+    font-size: 0.85rem;
+  }
+
+  .km-mobile-drawer__inner {
+    padding: 1.25rem;
   }
 
   .km-dropdown {
-    width: min(95vw, 14rem);
-  }
-
-  .km-dropdown__header {
-    gap: 0.5rem;
-    padding: 0.5rem;
-  }
-
-  .km-user__name {
-    font-size: 0.875rem;
-  }
-
-  .km-user__sub {
-    font-size: 0.75rem;
-  }
-
-  .km-dropdown__item {
-    padding: 0.625rem 0.75rem;
-    font-size: 0.875rem;
+    width: min(90vw, 15rem);
   }
 }
 

@@ -10,6 +10,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import EditProfile from "./pages/Editprofile";
 import CreateWork from "./pages/CreateWork";
 import WorkView from "./pages/WorkView";
+import CreatorProfile from "./pages/CreatorProfile";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./index.css";
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
     ]
   },
   { path: "/works/:id", element: <WorkView /> },
+  { path: "/creators/:userId", element: <CreatorProfile /> },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

@@ -4,7 +4,7 @@ import { FaArrowLeft, FaBookmark, FaRegBookmark, FaUsers } from 'react-icons/fa'
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { apiGet } from '../lib/api';
-import type { WorkDetail } from '../lib/api';
+import type { WorkDetail, PublicProfile } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import './WorkView.css';
 
@@ -24,12 +24,18 @@ export default function WorkView() {
     busy: false,
     error: null,
   });
+  const [authorProfile, setAuthorProfile] = useState<PublicProfile | null>(null);
+  const [authorLoading, setAuthorLoading] = useState(false);
+  const [authorError, setAuthorError] = useState<string | null>(null);
 
   useEffect(() => {
     setActive(0);
     setData(null);
     setError(null);
     setSaveState({ saved: false, total: 0, busy: false, error: null });
+    setAuthorProfile(null);
+    setAuthorError(null);
+    setAuthorLoading(false);
   }, [id]);
 
   useEffect(() => {
@@ -56,6 +62,38 @@ export default function WorkView() {
       total: typeof data?.saveCount === 'number' ? data.saveCount : prev.total,
     }));
   }, [data?.saveCount]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!data?.authorId) {
+      setAuthorProfile(null);
+      setAuthorError(null);
+      setAuthorLoading(false);
+      return;
+    }
+    if (data.authorProfile) {
+      setAuthorProfile(data.authorProfile);
+      setAuthorError(null);
+      setAuthorLoading(false);
+      return;
+    }
+    setAuthorLoading(true);
+    setAuthorError(null);
+    (async () => {
+      try {
+        const profile = await apiGet<PublicProfile>(`/auth/profile/public/${data.authorId}`);
+        if (!cancelled) setAuthorProfile(profile || null);
+      } catch (err: any) {
+        if (!cancelled) {
+          setAuthorProfile(null);
+          setAuthorError(err?.message ?? 'Unable to load creator');
+        }
+      } finally {
+        if (!cancelled) setAuthorLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [data?.authorId, data?.authorProfile]);
 
   useEffect(() => {
     if (!user) {
@@ -102,6 +140,17 @@ export default function WorkView() {
   const highlightTag = tagList[0]?.name || 'Featured Work';
   const description = data?.description?.trim() ? data.description : 'This project has no description yet.';
   const formattedSaveTotal = new Intl.NumberFormat().format(saveState.total);
+  const authorFallbackName = 'KMUTT Creator';
+  const authorName = authorProfile?.displayName || authorFallbackName;
+  const profileId = authorProfile?.userID || data?.authorId;
+  const authorLocation = authorProfile?.location || 'KMUTT, Thailand';
+  const authorJoined = authorProfile?.created_at
+    ? new Intl.DateTimeFormat(undefined, { month: 'short', year: 'numeric' }).format(new Date(authorProfile.created_at))
+    : null;
+  const authorBio = authorProfile?.bio?.trim() ? authorProfile.bio : null;
+  const authorContact = authorProfile?.contact?.trim() || '';
+  const authorAvatar = authorProfile?.avatarUrl
+    || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=F59E0B&color=fff`;
 
   const goBack = () => {
     if (window.history.length > 1) {
@@ -273,6 +322,45 @@ export default function WorkView() {
                 <div className="wv-actions">
                   <Link to="/" className="wv-action wv-action--primary">Explore more</Link>
                   <Link to="/profile#saved" className="wv-action">Go to saved</Link>
+                </div>
+
+                <div className="wv-author" aria-live="polite">
+                  <div className="wv-author__info">
+                    <div className="wv-author__avatar" aria-hidden={authorLoading}>
+                      {authorLoading ? (
+                        <span className="wv-author__avatar-skel" />
+                      ) : (
+                        <img
+                          src={authorAvatar}
+                          alt={`Avatar of ${authorName}`}
+                          onError={(e) => {
+                            const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=F59E0B&color=fff`;
+                            if (e.currentTarget.src !== fallback) e.currentTarget.src = fallback;
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <p className="wv-author__eyebrow">Posted by</p>
+                      <h3 className="wv-author__name">{authorLoading ? 'Loading creator…' : authorName}</h3>
+                      <div className="wv-author__badges">
+                        <span className="wv-author__badge">{authorLocation}</span>
+                        {authorJoined && <span className="wv-author__badge">Joined {authorJoined}</span>}
+                      </div>
+                      {authorBio && <p className="wv-author__bio">{authorBio}</p>}
+                      {authorContact && (
+                        <p className="wv-author__contact">Contact: <span>{authorContact}</span></p>
+                      )}
+                      {authorError && <p className="wv-author__error">{authorError}</p>}
+                    </div>
+                  </div>
+                  <div className="wv-author__actions">
+                    {profileId && (
+                      <Link className="wv-author__cta" to={`/creators/${profileId}`}>
+                        View profile
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -1,5 +1,6 @@
-﻿import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import Masonry from "react-masonry-css";
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import "./profile.css";
 import Navbar from "../components/Navbar";
@@ -21,6 +22,13 @@ type Card = {
 
 type TagItem = { tagId?: string; name: string };
 type EditMedia = { id?: string; dataUrl?: string; previewUrl: string; alttext?: string };
+
+const masonryBreakpoints = {
+  default: 4,
+  1400: 3,
+  1024: 2,
+  640: 1,
+};
 
 export default function Profile() {
   const { user, loading, refetchUser } = useAuth();
@@ -62,6 +70,9 @@ export default function Profile() {
           excerpt: w.description || '',
           tags: (w.tags || []).map((t: any) => t.name),
           thumb: w.thumbnail || null,
+          created_at: w.created_at || w.createdAt || null,
+          updated_at: w.updated_at || w.updatedAt || null,
+          status: w.status,
         }));
         setPosts(mapped);
       } catch {}
@@ -89,8 +100,8 @@ export default function Profile() {
         excerpt: w.description || '',
         tags: (w.tags || []).map((t: any) => t.name),
         thumb: w.thumbnail || null,
-        created_at: w.created_at,
-        updated_at: w.updatedAt,
+        created_at: w.created_at || w.createdAt || null,
+        updated_at: w.updated_at || w.updatedAt || null,
         status: w.status,
         savedAt: w.savedAt || w.saved_at || null,
       }));
@@ -106,12 +117,6 @@ export default function Profile() {
   useEffect(() => {
     fetchSaved();
   }, [fetchSaved]);
-
-  useEffect(() => {
-    if (tab === 'saved' && !saved.length && !savedLoading && !savedError) {
-      fetchSaved();
-    }
-  }, [tab, saved.length, savedLoading, savedError, fetchSaved]);
 
   // Load Profile row for display
   useEffect(() => {
@@ -211,8 +216,18 @@ export default function Profile() {
     (profile && profile.bio) ||
     user.user_metadata?.bio ||
     "Tell people who you are, what you are building, and what you are excited about.";
-  const activeList = tab === "saved" ? saved : posts;
-  const showSavedSpinner = tab === 'saved' && savedLoading && saved.length === 0;
+  const isSavedTab = tab === "saved";
+  const activeList = useMemo(() => (isSavedTab ? saved : posts), [isSavedTab, saved, posts]);
+  const showSavedSpinner = isSavedTab && savedLoading && saved.length === 0;
+  const emptyCopy = isSavedTab
+    ? {
+        title: "No saved works yet",
+        body: "Hit the bookmark icon on any work you love to keep it here.",
+      }
+    : {
+        title: "No posts from you yet",
+        body: "Share your first project to let others discover your craft.",
+      };
 
   const onDelete = async (id: string | number) => {
     if (!confirm('Delete this post? This cannot be undone.')) return;
@@ -364,11 +379,16 @@ export default function Profile() {
     setEditing({ ...editing, media: next });
   };
 
-  const formatSavedTimestamp = (value?: string | null) => {
+  const formatDateLabel = (value?: string | null) => {
     if (!value) return 'recently';
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return 'recently';
     return new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(d);
+  };
+  const describePostMeta = (item: Card) => {
+    if (item.status === 'draft') return 'Draft · visible only to you';
+    const timestamp = item.updated_at || item.created_at;
+    return timestamp ? `Updated ${formatDateLabel(timestamp)}` : 'Published work';
   };
 
   return (
@@ -418,7 +438,7 @@ export default function Profile() {
               <div className="meta-item"><span>Location</span><strong>{locationText}</strong></div>
               <div className="meta-item">
                 <span>Email</span>
-                <strong title={user.email || ""}>{user.email || "â€”"}</strong>
+                <strong title={user.email || ""}>{user.email || "”"}</strong>
               </div>
               <div className="meta-item"><span>Member since</span><strong>{user.created_at ? new Date(user.created_at).toLocaleDateString() : "-"}</strong></div>
             </div>
@@ -433,7 +453,7 @@ export default function Profile() {
               <a href="#" className="social" aria-label="linkedin"><FaLinkedinIn /></a>
             </div>
 
-            <div className="copy">Â© {new Date().getFullYear()} All rights reserved</div>
+            <div className="copy">© {new Date().getFullYear()} All rights reserved</div>
           </aside>
 
           {/* ===== Right: Content (Saved / Posts) ===== */}
@@ -463,54 +483,78 @@ export default function Profile() {
               </button>
             </div>
 
-            {tab === 'saved' && savedError && (
+            {isSavedTab && savedError && (
               <div className="alert" role="alert">{savedError}</div>
             )}
 
             {showSavedSpinner ? (
               <div className="loading">Loading saved works…</div>
             ) : activeList.length ? (
-              <div className="grid" aria-live="polite">
-                {activeList.map((item, i) => (
-                  <article
-                    key={item.id}
-                    className="card fade-in-up"
-                    style={{ animationDelay: `${Math.min(i, 6) * 60}ms` }}
-                  >
-                    <div className="thumb" aria-hidden="true">
-                      {item.thumb ? (
-                        <img src={item.thumb} alt="thumbnail" style={{width:'100%',height:'100%',objectFit:'cover', borderRadius: 'inherit'}} />
-                      ) : (
-                        <div className="thumb-shape" />
-                      )}
-                    </div>
-                    <div className="card-body">
-                      <h3 className="card-title">{item.title}</h3>
-                      <p className="card-text">{item.excerpt}</p>
-                      <div className="tags">
-                        {(item.tags || []).map((t) => (
-                          <span className="tag" key={t}>{t}</span>
-                        ))}
+              <div className="masonry-wrapper" aria-live="polite">
+                <Masonry
+                  breakpointCols={masonryBreakpoints}
+                  className="masonry-grid"
+                  columnClassName="masonry-column"
+                >
+                  {activeList.map((item, i) => (
+                    <article
+                      key={item.id}
+                      className="card fade-in-up"
+                      style={{ animationDelay: `${Math.min(i, 6) * 60}ms` }}
+                    >
+                      <Link
+                        to={`/works/${item.id}`}
+                        className="card-cover"
+                        aria-label={`View work ${item.title}`}
+                      >
+                        {item.thumb ? (
+                          <img src={item.thumb} alt="" />
+                        ) : (
+                          <div className="card-cover__fallback" aria-hidden="true" />
+                        )}
+                      </Link>
+                      <div className="card-content">
+                        <div className="card-chip-row">
+                          {(item.tags || []).length ? (
+                            (item.tags || []).slice(0, 3).map((t) => (
+                              <span className="chip" key={t}>{t}</span>
+                            ))
+                          ) : (
+                            <span className="chip muted">untagged</span>
+                          )}
+                          {tab === 'posts' && item.status && (
+                            <span className={`chip status status-${String(item.status).toLowerCase()}`}>{item.status}</span>
+                          )}
+                        </div>
+                        <h3 className="card-title">{item.title}</h3>
+                        {item.excerpt && (
+                          <p className="card-text">{item.excerpt}</p>
+                        )}
+                        <div className="card-meta">
+                          <span>
+                            {tab === 'saved'
+                              ? `Saved ${formatDateLabel(item.savedAt)}`
+                              : describePostMeta(item)}
+                          </span>
+                          {tab === 'posts' ? (
+                            <div className="card-actions">
+                              <button className="btn-mini ghost" onClick={() => startEdit(item)} disabled={busy}>Edit</button>
+                              <button className="btn-mini danger" onClick={() => onDelete(item.id)} disabled={busy}>Delete</button>
+                              <Link className="btn-mini primary" to={`/works/${item.id}`}>View</Link>
+                            </div>
+                          ) : (
+                            <Link className="btn-mini primary" to={`/works/${item.id}`}>View</Link>
+                          )}
+                        </div>
                       </div>
-                      {tab === 'posts' ? (
-                        <div className="card-actions">
-                          <button className="btn-mini" onClick={() => startEdit(item)} disabled={busy}>Edit</button>
-                          <button className="btn-mini danger" onClick={() => onDelete(item.id)} disabled={busy}>Delete</button>
-                        </div>
-                      ) : (
-                        <div className="card-footer">
-                          <span>Saved {formatSavedTimestamp(item.savedAt)}</span>
-                          <Link className="btn-mini primary" to={`/works/${item.id}`}>View work</Link>
-                        </div>
-                      )}
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  ))}
+                </Masonry>
               </div>
             ) : (
               <div className="empty-state">
-                <h3>No {tab === "saved" ? "saved items" : "posts"} yet</h3>
-                <p>Start exploring and share your work to see it here.</p>
+                <h3>{emptyCopy.title}</h3>
+                <p>{emptyCopy.body}</p>
               </div>
             )}
             {editing && (

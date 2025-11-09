@@ -30,6 +30,9 @@ export type WorkListItem = {
   status: string;
   thumbnail?: string | null;
   tags?: { tagId: string; name: string }[];
+  created_at?: string | null;
+  updatedAt?: string | null;
+  publishedAt?: string | null;
 };
 
 export type WorkDetail = WorkListItem & {
@@ -39,5 +42,15 @@ export type WorkDetail = WorkListItem & {
   updatedAt?: string | null;
   created_at?: string | null;
   media: { id?: string; fileurl: string; filetype?: string; alttext?: string }[];
+  authorProfile?: PublicProfile | null;
 };
 
+export type PublicProfile = {
+  userID?: string;
+  displayName?: string;
+  bio?: string | null;
+  contact?: string | null;
+  avatarUrl?: string | null;
+  location?: string | null;
+  created_at?: string | null;
+};
