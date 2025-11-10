@@ -228,6 +228,36 @@
 }
 .wv-save:disabled{ opacity: .6; cursor: wait; }
 
+.wv-report {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #fca5a5;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 600;
+  background: #fee2e2;
+  color: #b91c1c;
+  cursor: pointer;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.wv-report svg {
+  font-size: 18px;
+}
+
+.wv-report:hover {
+  transform: translateY(-1px);
+  border-color: #ef4444;
+}
+
+.wv-report:active {
+  background: #ef4444;
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 20px 30px rgba(239, 68, 68, 0.35);
+}
+
 .wv-save-meta{
   display: flex;
   align-items: center;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaBookmark, FaRegBookmark, FaUsers } from 'react-icons/fa';
+import { FaArrowLeft, FaBookmark, FaRegBookmark, FaUsers, FaFlag } from 'react-icons/fa';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -299,21 +299,40 @@ export default function WorkView() {
               </div>
 
               <div className="wv-card wv-panel">
-                <div className="wv-panel__header">
-                  <div>
-                    <p className="wv-eyebrow">{highlightTag}</p>
-                    <h1 id="work-title" className="wv-title">{data.title}</h1>
+                  <div className="wv-panel__header">
+                    <div>
+                      <p className="wv-eyebrow">{highlightTag}</p>
+                      <h1 id="work-title" className="wv-title">{data.title}</h1>
+                    </div>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'flex-end', 
+                      gap: '8px' 
+                    }}>
+                    
+                    {/* Save */}
+                    <button
+                      type="button"
+                      className={`wv-save ${saveState.saved ? 'is-active' : ''}`}
+                      onClick={toggleSave}
+                      disabled={saveState.busy}
+                    >
+                      {saveState.saved ? <FaBookmark aria-hidden="true" /> : <FaRegBookmark aria-hidden="true" />}
+                      <span>{saveState.saved ? 'Saved' : 'Save work'}</span>
+                    </button>
+
+                    {/* Report */}
+                    <button
+                      type="button"
+                      className="wv-report"
+                    >
+                      <FaFlag aria-hidden="true" />
+                      <span style={{ marginLeft: 6 }}>Report</span>
+                    </button>
+
                   </div>
-                  <button
-                    type="button"
-                    className={`wv-save ${saveState.saved ? 'is-active' : ''}`}
-                    onClick={toggleSave}
-                    disabled={saveState.busy}
-                  >
-                    {saveState.saved ? <FaBookmark aria-hidden="true" /> : <FaRegBookmark aria-hidden="true" />}
-                    <span>{saveState.saved ? 'Saved' : 'Save work'}</span>
-                  </button>
-                </div>
+                </div> 
 
                 <div className="wv-save-meta">
                   <FaUsers aria-hidden="true" />
