@@ -1,0 +1,87 @@
+/* แถวในตารางที่คลิกได้ */
+.row-clickable {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.row-clickable:hover {
+  background: #fffaf0;
+}
+
+/* แถวที่ถูกเลือก */
+.row-selected {
+  background: #fff2d9 !important;
+}
+
+/* กล่องรายละเอียดบัญชีที่เลือก */
+.user-detail-panel {
+  border-top: 1px solid #f0f0f0;
+  padding: 1rem 1.3rem 1.3rem;
+  background: #fffdf8;
+  border-radius: 0 0 16px 16px;
+}
+
+.user-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 0.8rem;
+}
+
+.avatar-lg {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.user-detail-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
+}
+
+.user-detail-email {
+  font-size: 0.85rem;
+  color: #777;
+}
+
+/* แท็กแสดงสถานะต่าง ๆ */
+.user-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.tag {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tag-green {
+  border-color: #54b35f;
+  background: #e7f7ea;
+  color: #25692d;
+}
+
+.tag-blue {
+  border-color: #4c8dff;
+  background: #e6f0ff;
+  color: #234b92;
+}
+
+.tag-orange {
+  border-color: #ff8c00;
+  background: #fff2dc;
+  color: #9b4b00;
+}
+
+/* ปุ่มใน panel รายละเอียด */
+.user-detail-actions {
+  display: flex;
+  gap: 0.5rem;
+}
