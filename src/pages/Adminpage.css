@@ -1,87 +1,413 @@
-/* แถวในตารางที่คลิกได้ */
+.admin-app {
+  background: #f9f5ff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-shell {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem;
+  flex: 1;
+}
+
+.admin-headline {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.admin-headline h1 {
+  margin: 0.3rem 0 0.2rem;
+  font-size: 2rem;
+}
+
+.headline-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metric-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.1rem 1.3rem;
+  border: 1px solid rgba(106, 69, 255, 0.1);
+  box-shadow: 0 8px 20px rgba(53, 38, 160, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.metric-card--accent {
+  background: linear-gradient(135deg, #ffd9a8, #ffc371);
+  border: none;
+  color: #2f1300;
+  box-shadow: 0 12px 30px rgba(255, 149, 0, 0.25);
+}
+
+.metric-card span {
+  font-size: 0.9rem;
+  color: #7a6a92;
+}
+
+.metric-card strong {
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.metric-card small {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.report-panel {
+  background: #fff;
+  border-radius: 26px;
+  padding: 1.8rem;
+  border: 1px solid rgba(63, 35, 149, 0.08);
+  box-shadow: 0 20px 60px rgba(32, 8, 68, 0.1);
+}
+
+.report-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+
+.status-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.status-chip {
+  border: 1px solid rgba(82, 59, 158, 0.15);
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.45rem 1.05rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.status-chip.is-active {
+  background: #523b9e;
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 12px 22px rgba(82, 59, 158, 0.35);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(82, 59, 158, 0.15);
+  border-radius: 999px;
+  padding: 0.35rem 1rem;
+  flex: 1;
+  min-width: 240px;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.admin-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #eefcf3;
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.2);
+  border-radius: 12px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.reports-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.5rem;
+}
+
+.report-table-card {
+  background: #fffdfa;
+  border-radius: 22px;
+  border: 1px solid rgba(239, 209, 159, 0.5);
+  padding: 1rem 1.2rem;
+}
+
+.report-table-head h2 {
+  margin: 0;
+}
+
+.report-table-head p {
+  margin: 0;
+  color: #8b7f9f;
+  font-size: 0.9rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin-top: 0.8rem;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.report-table th {
+  text-align: left;
+  padding: 0.75rem 0.5rem;
+  font-weight: 600;
+  color: #7a6a92;
+  border-bottom: 1px solid rgba(122, 106, 146, 0.2);
+}
+
+.report-table td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid rgba(122, 106, 146, 0.12);
+}
+
 .row-clickable {
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.2s ease;
 }
 
 .row-clickable:hover {
-  background: #fffaf0;
+  background: rgba(255, 240, 214, 0.6);
 }
 
-/* แถวที่ถูกเลือก */
 .row-selected {
-  background: #fff2d9 !important;
+  background: rgba(252, 220, 178, 0.55);
 }
 
-/* กล่องรายละเอียดบัญชีที่เลือก */
-.user-detail-panel {
-  border-top: 1px solid #f0f0f0;
-  padding: 1rem 1.3rem 1.3rem;
-  background: #fffdf8;
-  border-radius: 0 0 16px 16px;
+.work-cell {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
 }
 
-.user-detail-header {
+.work-cell img {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.work-title {
+  margin: 0;
+  font-weight: 600;
+  color: #2a1c45;
+}
+
+.work-cell span {
+  font-size: 0.8rem;
+  color: #8a7aa7;
+}
+
+.reporter-cell p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.reporter-cell span {
+  font-size: 0.82rem;
+  color: #8a7aa7;
+}
+
+.reason-cell {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  margin-bottom: 0.8rem;
-}
-
-.avatar-lg {
-  width: 40px;
-  height: 40px;
-  font-size: 1rem;
-}
-
-.user-detail-name {
+  gap: 0.35rem;
+  color: #c05621;
   font-weight: 600;
-  font-size: 1rem;
-  color: #333;
 }
 
-.user-detail-email {
-  font-size: 0.85rem;
-  color: #777;
-}
-
-/* แท็กแสดงสถานะต่าง ๆ */
-.user-detail-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.9rem;
-}
-
-.tag {
-  font-size: 0.78rem;
-  padding: 0.25rem 0.55rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
+.status-pill {
   display: inline-flex;
   align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.8rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.86rem;
 }
 
-.tag-green {
-  border-color: #54b35f;
-  background: #e7f7ea;
-  color: #25692d;
+.status-pending {
+  background: #fff2db;
+  color: #9c2f00;
 }
 
-.tag-blue {
-  border-color: #4c8dff;
-  background: #e6f0ff;
-  color: #234b92;
+.status-finished {
+  background: #e7f8f0;
+  color: #0f6b3e;
 }
 
-.tag-orange {
-  border-color: #ff8c00;
-  background: #fff2dc;
-  color: #9b4b00;
+.status-rejected {
+  background: #fde8e8;
+  color: #b42318;
 }
 
-/* ปุ่มใน panel รายละเอียด */
-.user-detail-actions {
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: #8b7f9f;
   display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.report-detail-pane {
+  border: 1px solid rgba(122, 106, 146, 0.18);
+  border-radius: 22px;
+  padding: 1.5rem;
+  background: #fbfbff;
+  min-height: 480px;
+}
+
+.detail-header h3 {
+  margin: 0.1rem 0;
+}
+
+.work-meta {
+  font-size: 0.9rem;
+  color: #7a6a92;
+}
+
+.detail-section {
+  margin-top: 1.4rem;
+}
+
+.detail-section h4 {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+}
+
+.detail-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.detail-section li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.detail-section li span {
+  color: #8a7aa7;
+  font-size: 0.85rem;
+}
+
+.detail-section li strong {
+  font-size: 1rem;
+}
+
+.detail-section li small {
+  color: #6f6a80;
+}
+
+.decision-label {
+  margin: 0;
+  font-weight: 600;
+}
+
+.decision-note {
+  margin: 0.2rem 0 0.3rem;
+  color: #5c556b;
+}
+
+.detail-actions {
+  margin-top: 1.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.primary-btn,
+.outline-btn,
+.ghost-btn {
+  border: none;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 0.7rem 1.2rem;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #ff914d, #ff5c39);
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(255, 108, 57, 0.35);
+}
+
+.outline-btn {
+  border: 1px solid rgba(82, 59, 158, 0.3);
+  background: #fff;
+  color: #3d2c71;
+}
+
+.ghost-btn {
+  background: rgba(61, 44, 113, 0.05);
+  color: #3d2c71;
+}
+
+.primary-btn:hover,
+.outline-btn:hover,
+.ghost-btn:hover {
+  transform: translateY(-1px);
+}
+
+.empty-pane {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 0.5rem;
+  color: #8a7aa7;
+  height: 100%;
+}
+
+@media (max-width: 1024px) {
+  .reports-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-headline {
+    flex-direction: column;
+  }
+  .report-panel {
+    padding: 1.2rem;
+  }
+  .metric-card strong {
+    font-size: 1.6rem;
+  }
 }

@@ -14,6 +14,7 @@ import CreateWork from "./pages/CreateWork";
 import WorkView from "./pages/WorkView";
 import CreatorProfile from "./pages/CreatorProfile";
 import AdminPage from "./pages/AdminPage";
+import AdminLogin from "./pages/AdminLogin";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./index.css";
@@ -59,6 +60,7 @@ const router = createBrowserRouter([
 
 
   { path: "/admin", element: <AdminPage /> },
+  { path: "/admin/login", element: <AdminLogin /> },
 
   {
     element: <ProtectedRoute />,
