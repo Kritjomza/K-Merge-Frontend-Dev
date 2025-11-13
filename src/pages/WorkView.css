@@ -17,7 +17,7 @@
 
 .wv-shell{
   width: 100%;
-  max-width: 1180px;
+  max-width: 980px;
   margin: 0 auto;
   padding: clamp(18px, 3vw, 32px) clamp(14px, 4vw, 24px) clamp(34px, 5vw, 60px);
   display: flex;
@@ -66,8 +66,8 @@
 .wv-layout{
   display: grid;
   width: 100%;
-  grid-template-columns: minmax(0,1.3fr) minmax(0,1fr);
-  gap: clamp(24px, 3.5vw, 38px);
+  grid-template-columns: minmax(0,1.15fr) minmax(0,0.95fr);
+  gap: clamp(20px, 3vw, 32px);
   align-items: stretch;
 }
 @media (max-width: 1024px){
@@ -201,9 +201,6 @@
   flex-direction: column;
   gap: 6px;
 }
-.wv-info__actions{
-  display: none;
-}
 .wv-eyebrow{
   font-size: 12px;
   text-transform: uppercase;
@@ -258,9 +255,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
   border: 1px solid rgba(15,23,42,0.12);
   background: rgba(15,23,42,0.04);
   color: var(--wv-brand);

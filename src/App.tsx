@@ -87,13 +87,6 @@ export default function App() {
     return data;
   }, [allPosts, activeTag, query]);
 
-  const heroHighlight = allPosts[0] ?? {
-    id: "preview",
-    title: "KMUTT Motion Lab 2025",
-    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
-    tags: ["Motion", "Product"],
-  };
-
   const projectsCount = allPosts.length;
   const activeCreatorCount = useMemo(() => {
     const unique = new Set<string>();
@@ -234,18 +227,6 @@ export default function App() {
                 <strong>{activeCreatorCount.toLocaleString()}</strong>
                 <span>Active creators</span>
               </div>
-              {/* <div className="km-featured" role="article" aria-label="Featured drop">
-                <img src={heroHighlight.image} alt={heroHighlight.title} />
-                <div>
-                  <p>Featured drop</p>
-                  <strong>{heroHighlight.title}</strong>
-                  <div className="km-mini-tags">
-                    {(heroHighlight.tags || []).slice(0, 2).map((t) => (
-                      <span key={t}>{t}</span>
-                    ))}
-                  </div>
-                </div>
-              </div> */}
             </div>
           </div>
         </section>

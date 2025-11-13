@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { FiAlertTriangle, FiCheckCircle, FiClock, FiFlag, FiSearch } from "react-icons/fi";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -69,7 +70,7 @@ type ReviewActionRow = {
   actedAt?: string | null;
 };
 
-const STATUS_LABEL: Record<ReportStatus, { label: string; icon: JSX.Element }> = {
+const STATUS_LABEL: Record<ReportStatus, { label: string; icon: ReactNode }> = {
   pending: { label: "Pending", icon: <FiClock /> },
   finished: { label: "Finished", icon: <FiCheckCircle /> },
   rejected: { label: "Rejected", icon: <FiAlertTriangle /> },
