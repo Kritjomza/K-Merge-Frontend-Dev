@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaBookmark, FaRegBookmark, FaUsers, FaFlag } from 'react-icons/fa';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
@@ -7,7 +7,16 @@ import Footer from '../components/Footer';
 import { apiGet } from '../lib/api';
 import type { WorkDetail, PublicProfile } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { supabaseInsert } from '../lib/supabase';
 import './WorkView.css';
+
+const REPORT_OPTIONS = [
+  { value: 'spam', label: 'สแปม (Spam)' },
+  { value: 'inappropriate', label: 'เนื้อหาไม่เหมาะสม / 18+' },
+  { value: 'copyright', label: 'ละเมิดลิขสิทธิ์' },
+  { value: 'hate', label: 'ภาษาหยาบคาย / Hate Speech' },
+  { value: 'fake', label: 'ข้อมูลปลอม' },
+];
 
 type SaveSummary = { saved: boolean; total: number };
 
@@ -28,6 +37,14 @@ export default function WorkView() {
   const [authorProfile, setAuthorProfile] = useState<PublicProfile | null>(null);
   const [authorLoading, setAuthorLoading] = useState(false);
   const [authorError, setAuthorError] = useState<string | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReasons, setReportReasons] = useState<string[]>([]);
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportState, setReportState] = useState<{ submitting: boolean; success: boolean; error: string | null }>({
+    submitting: false,
+    success: false,
+    error: null,
+  });
 
   useEffect(() => {
     setActive(0);
@@ -138,7 +155,6 @@ export default function WorkView() {
     day: 'numeric',
   }) : '—';
   const tagList = data?.tags || [];
-  const highlightTag = tagList[0]?.name || 'Featured Work';
   const description = data?.description?.trim() ? data.description : 'This project has no description yet.';
   const formattedSaveTotal = new Intl.NumberFormat().format(saveState.total);
   const authorFallbackName = 'KMUTT Creator';
@@ -208,6 +224,71 @@ export default function WorkView() {
     }
   };
 
+  const resetReportState = () => {
+    setReportReasons([]);
+    setReportDetails('');
+    setReportState({ submitting: false, success: false, error: null });
+  };
+
+  const closeReportModal = () => {
+    setReportOpen(false);
+    resetReportState();
+  };
+
+  const openReportModal = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    setReportOpen(true);
+    setReportState(prev => ({ ...prev, success: false, error: null }));
+  };
+
+  const toggleReason = (value: string) => {
+    setReportReasons(prev => (prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]));
+  };
+
+  const handleReportSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    const workId = data?.workId || id;
+    if (!workId) {
+      setReportState(prev => ({ ...prev, error: 'ไม่พบรหัสผลงานสำหรับการรายงาน' }));
+      return;
+    }
+    if (reportReasons.length === 0) {
+      setReportState(prev => ({ ...prev, error: 'กรุณาเลือกเหตุผลอย่างน้อย 1 ข้อ' }));
+      return;
+    }
+    setReportState({ submitting: true, success: false, error: null });
+    try {
+      const reasonText = reportReasons
+        .map(value => REPORT_OPTIONS.find(option => option.value === value)?.label || value)
+        .join(', ');
+      await supabaseInsert('Report', {
+        workId,
+        reporterId: user.id,
+        reason: reasonText,
+        details: reportDetails.trim() || null,
+        status: 'pending',
+        reportedAt: new Date().toISOString(),
+      });
+      setReportState({ submitting: false, success: true, error: null });
+      setTimeout(() => {
+        closeReportModal();
+      }, 1600);
+    } catch (err: any) {
+      setReportState({
+        submitting: false,
+        success: false,
+        error: err?.message || 'ไม่สามารถส่งรายงานได้',
+      });
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -237,12 +318,12 @@ export default function WorkView() {
 
         {data && (
           <section className="wv-shell" aria-labelledby="work-title">
-            <div className="wv-top">
+            <div className="wv-header">
               <button type="button" className="wv-back" onClick={goBack}>
                 <FaArrowLeft aria-hidden="true" />
                 Back
               </button>
-              <span className="wv-tagline">Spotlight</span>
+              <span className="wv-status-pill">{statusLabel}</span>
             </div>
 
             <div className="wv-layout">
@@ -298,49 +379,47 @@ export default function WorkView() {
                 )}
               </div>
 
-              <div className="wv-card wv-panel">
-                  <div className="wv-panel__header">
-                    <div>
-                      <p className="wv-eyebrow">{highlightTag}</p>
-                      <h1 id="work-title" className="wv-title">{data.title}</h1>
+              <div className="wv-card wv-info">
+                <div className="wv-info__header">
+                  <div className="wv-title-block">
+                    <h1 id="work-title" className="wv-title">{data.title}</h1>
+                    <div className="wv-meta-grid">
+                      <p>{formattedDate}</p>
+                      {/* <p>{mediaCount} {mediaCount === 1 ? 'shot' : 'shots'}</p> */}
+                      <div className="wv-info__statline">
+                        <FaUsers aria-hidden="true" />
+                        <span>{formattedSaveTotal} {saveState.total === 1 ? 'person' : 'people'} bookmarked this</span>
+                      </div>
                     </div>
-                    <div style={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      alignItems: 'flex-end', 
-                      gap: '8px' 
-                    }}>
-                    
-                    {/* Save */}
-                    <button
-                      type="button"
-                      className={`wv-save ${saveState.saved ? 'is-active' : ''}`}
-                      onClick={toggleSave}
-                      disabled={saveState.busy}
-                    >
-                      {saveState.saved ? <FaBookmark aria-hidden="true" /> : <FaRegBookmark aria-hidden="true" />}
-                      <span>{saveState.saved ? 'Saved' : 'Save work'}</span>
-                    </button>
+                  </div>
+                </div>
 
-                    {/* Report */}
-                    <button
+                <div className="wv-cta-row">
+                  <button
+                    type="button"
+                    className={`wv-save ${saveState.saved ? 'is-active' : ''}`}
+                    onClick={toggleSave}
+                    disabled={saveState.busy}
+                  >
+                    {saveState.saved ? <FaBookmark aria-hidden="true" /> : <FaRegBookmark aria-hidden="true" />}
+                    <span>{saveState.saved ? 'Saved' : 'Save this work'}</span>
+                  </button>
+                  <button
                       type="button"
                       className="wv-report"
+                      onClick={openReportModal}
+                      aria-label="Report work"
                     >
                       <FaFlag aria-hidden="true" />
-                      <span style={{ marginLeft: 6 }}>Report</span>
                     </button>
-
-                  </div>
-                </div> 
-
-                <div className="wv-save-meta">
-                  <FaUsers aria-hidden="true" />
-                  <span>{formattedSaveTotal} {saveState.total === 1 ? 'creative' : 'creatives'} saved this</span>
                 </div>
                 {saveState.error && <p className="wv-save-error">{saveState.error}</p>}
 
-                <div className="wv-chips">
+                <article className="wv-desc">
+                  {description}
+                </article>
+
+                <div className="wv-chip-rail">
                   {tagList.length ? (
                     tagList.map(tag => (
                       <span key={tag.tagId ?? tag.name} className="wv-chip">{tag.name}</span>
@@ -350,28 +429,19 @@ export default function WorkView() {
                   )}
                 </div>
 
-                <article className="wv-desc">
-                  {description}
-                </article>
-
-                <div className="wv-stats" role="list">
-                  <div className="wv-stat" role="listitem">
-                    <span className="wv-stat__label">Status</span>
-                    <span className="wv-stat__value">{statusLabel}</span>
+                <div className="wv-metrics" role="list">
+                  <div className="wv-metric" role="listitem">
+                    <span>Status</span>
+                    <strong>{statusLabel}</strong>
                   </div>
-                  <div className="wv-stat" role="listitem">
-                    <span className="wv-stat__label">Shots</span>
-                    <span className="wv-stat__value">{mediaCount}</span>
+                  <div className="wv-metric" role="listitem">
+                    <span>Shots</span>
+                    <strong>{mediaCount}</strong>
                   </div>
-                  <div className="wv-stat" role="listitem">
-                    <span className="wv-stat__label">Updated</span>
-                    <span className="wv-stat__value">{formattedDate}</span>
+                  <div className="wv-metric" role="listitem">
+                    <span>Updated</span>
+                    <strong>{formattedDate}</strong>
                   </div>
-                </div>
-
-                <div className="wv-actions">
-                  <Link to="/" className="wv-action wv-action--primary">Explore more</Link>
-                  <Link to="/profile#saved" className="wv-action">Go to saved</Link>
                 </div>
 
                 <div className="wv-author" aria-live="polite">
@@ -391,7 +461,7 @@ export default function WorkView() {
                       )}
                     </div>
                     <div>
-                      <p className="wv-author__eyebrow">Posted by</p>
+                      <p className="wv-author__eyebrow">Creator</p>
                       <h3 className="wv-author__name">{authorLoading ? 'Loading creator…' : authorName}</h3>
                       <div className="wv-author__badges">
                         <span className="wv-author__badge">{authorLocation}</span>
@@ -418,6 +488,64 @@ export default function WorkView() {
         )}
       </main>
       <Footer />
+      {reportOpen && (
+        <div className="wv-report-layer" role="dialog" aria-modal="true" aria-labelledby="wv-report-title">
+          <div className="wv-report-modal">
+            <div className="wv-report-modal__head">
+              <div>
+                <p className="wv-eyebrow">Safety</p>
+                <h2 id="wv-report-title">Report this work</h2>
+                <p>เลือกเหตุผลที่เข้าข่ายและบอกเราเพิ่มเติมหากต้องการ</p>
+              </div>
+              <button type="button" className="wv-report-close" onClick={closeReportModal} aria-label="Close report form">×</button>
+            </div>
+            <form className="wv-report-form" onSubmit={handleReportSubmit}>
+              <fieldset disabled={reportState.submitting}>
+                <legend className="sr-only">Report reasons</legend>
+                <div className="wv-report-options">
+                  {REPORT_OPTIONS.map(option => {
+                    const checked = reportReasons.includes(option.value);
+                    return (
+                      <label key={option.value} className={`wv-report-option ${checked ? 'is-active' : ''}`}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleReason(option.value)}
+                          value={option.value}
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <label className="wv-report-textarea">
+                  <span>รายละเอียดเพิ่มเติม (ไม่บังคับ)</span>
+                  <textarea
+                    rows={3}
+                    value={reportDetails}
+                    onChange={e => setReportDetails(e.target.value)}
+                    placeholder="อธิบายว่ามีส่วนไหนผิดกฎหรือไม่สุภาพ"
+                  />
+                </label>
+              </fieldset>
+              {reportState.error && <p className="wv-report-error">{reportState.error}</p>}
+              {reportState.success && <p className="wv-report-success">ส่งรายงานแล้ว ขอบคุณที่ช่วยดูแลคอมมูนิตี้</p>}
+              <div className="wv-report-actions">
+                <button type="button" className="wv-report-btn ghost" onClick={closeReportModal} disabled={reportState.submitting}>
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="wv-report-btn primary"
+                  disabled={reportState.submitting || reportReasons.length === 0}
+                >
+                  {reportState.submitting ? 'กำลังส่ง…' : 'ส่งรายงาน'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

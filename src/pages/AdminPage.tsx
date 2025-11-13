@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FiAlertTriangle, FiCheckCircle, FiClock, FiFlag, FiSearch } from "react-icons/fi";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useAuth } from "../contexts/AuthContext";
+import { supabaseInsert, supabaseRest, supabaseUpdate } from "../lib/supabase";
 import "../App.css";
 import "./Adminpage.css";
 
@@ -28,82 +30,44 @@ type ReportRecord = {
   };
 };
 
-const MOCK_REPORTS: ReportRecord[] = [
-  {
-    id: "REP-4012",
-    status: "pending",
-    reason: "ละเมิดลิขสิทธิ์",
-    details: "งานนี้คล้ายกับโปรเจกต์ใน Behance แทบทั้งหมด",
-    reportedAt: "2024-06-17T09:10:00Z",
-    work: {
-      workId: "work-541",
-      title: "Futuristic Banking Dashboard",
-      thumbnail: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=60",
-      author: { id: "usr-999", name: "Pattaradanai Tan", email: "pattaradanai@example.com" },
-    },
-    reporter: { id: "usr-222", name: "Natthanon", email: "natta@kmutt.ac.th" },
-  },
-  {
-    id: "REP-3999",
-    status: "pending",
-    reason: "ข้อมูลเท็จ",
-    details: "อ้างถึงข้อมูลผู้ใช้งาน 500K ที่ไม่มีหลักฐาน",
-    reportedAt: "2024-06-16T15:32:00Z",
-    work: {
-      workId: "work-530",
-      title: "Green Mobility App",
-      thumbnail: "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=600&q=60",
-      author: { id: "usr-211", name: "Tawan Sae", email: "tawan@example.com" },
-    },
-    reporter: { id: "usr-112", name: "Chutima", email: "chutima@kmutt.ac.th" },
-    reviewAction: {
-      decision: "ขอข้อมูลเพิ่ม",
-      note: "รอหลักฐานจากผู้สร้างผลงาน",
-      actedBy: "Admin K-02",
-      actedAt: "2024-06-17T02:14:00Z",
-    },
-  },
-  {
-    id: "REP-3983",
-    status: "finished",
-    reason: "เนื้อหาไม่เหมาะสม",
-    details: "ภาพประกอบและคำบรรยายไม่เหมาะสมกับชุมชน",
-    reportedAt: "2024-06-14T12:00:00Z",
-    work: {
-      workId: "work-501",
-      title: "Midnight Illustration Pack",
-      thumbnail: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=60",
-      author: { id: "usr-900", name: "Sasiwimon", email: "sasi@kmutt.ac.th" },
-    },
-    reporter: { id: "usr-004", name: "Peerawit", email: "peerawit@kmutt.ac.th" },
-    reviewAction: {
-      decision: "ลบผลงาน",
-      note: "แจ้งนักศึกษาพร้อมคำเตือนครั้งที่ 1",
-      actedBy: "Admin K-01",
-      actedAt: "2024-06-15T08:45:00Z",
-    },
-  },
-  {
-    id: "REP-3950",
-    status: "rejected",
-    reason: "สแปม",
-    details: "ลิงก์ที่ให้มาพบว่าไม่อันตราย เป็นกิจกรรมของชมรม",
-    reportedAt: "2024-06-17T05:55:00Z",
-    work: {
-      workId: "work-489",
-      title: "KMUTT Club Landing Page",
-      thumbnail: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=600&q=60",
-      author: { id: "usr-770", name: "Anongnat", email: "anongnat@example.com" },
-    },
-    reporter: { id: "usr-310", name: "Jirayu", email: "jirayu@kmutt.ac.th" },
-    reviewAction: {
-      decision: "ปฏิเสธรายงาน",
-      note: "ไม่มีพฤติกรรม spam และเป็นลิงก์ KMUTT อย่างเป็นทางการ",
-      actedBy: "Admin K-04",
-      actedAt: "2024-06-16T11:22:00Z",
-    },
-  },
-];
+type ReportRow = {
+  id: string;
+  workId: string;
+  reporterId: string | null;
+  reason?: string | null;
+  details?: string | null;
+  status?: string | null;
+  reportedAt?: string | null;
+};
+
+type WorkRow = {
+  workId: string;
+  title?: string | null;
+  authorId?: string | null;
+  Media?: { fileurl?: string | null }[];
+};
+
+type ProfileRow = {
+  userID: string;
+  displayName?: string | null;
+  contact?: string | null;
+  avatarUrl?: string | null;
+};
+
+type UserRow = {
+  id: string;
+  full_name?: string | null;
+  email?: string | null;
+};
+
+type ReviewActionRow = {
+  id: string;
+  reportId: string;
+  decision?: string | null;
+  note?: string | null;
+  actedBy?: string | null;
+  actedAt?: string | null;
+};
 
 const STATUS_LABEL: Record<ReportStatus, { label: string; icon: JSX.Element }> = {
   pending: { label: "Pending", icon: <FiClock /> },
@@ -111,15 +75,66 @@ const STATUS_LABEL: Record<ReportStatus, { label: string; icon: JSX.Element }> =
   rejected: { label: "Rejected", icon: <FiAlertTriangle /> },
 };
 
-const formatDate = (value: string) =>
-  new Date(value).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
+const REPORT_PLACEHOLDER_THUMB =
+  "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=60";
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
+};
 
 export default function AdminPage() {
-  const [reports] = useState<ReportRecord[]>(MOCK_REPORTS);
+  const { user } = useAuth();
+  const [reports, setReports] = useState<ReportRecord[]>([]);
   const [statusFilter, setStatusFilter] = useState<ReportStatus | "all">("all");
   const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(reports[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [loadingReports, setLoadingReports] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [decisionBusy, setDecisionBusy] = useState(false);
+  const toastTimer = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadReports() {
+      setLoadingReports(true);
+      setError(null);
+      try {
+        const rows = await supabaseRest<ReportRow[]>("Report", {
+          searchParams: {
+            select: "id,workId,reporterId,reason,details,status,reportedAt",
+            order: "reportedAt.desc.nullslast",
+          },
+          signal: controller.signal,
+        });
+        const hydrated = await hydrateReports(rows || [], controller.signal);
+        if (!controller.signal.aborted) {
+          setReports(hydrated);
+        }
+      } catch (err: any) {
+        if (!controller.signal.aborted) {
+          setError(err?.message || "ไม่สามารถโหลดรายการรายงานได้");
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingReports(false);
+        }
+      }
+    }
+    loadReports();
+    return () => controller.abort();
+  }, [refreshKey]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -130,7 +145,7 @@ export default function AdminPage() {
         report.work.title.toLowerCase().includes(q) ||
         report.reason.toLowerCase().includes(q) ||
         report.reporter.name.toLowerCase().includes(q) ||
-        report.reporter.email.toLowerCase().includes(q);
+        (report.reporter.email || "").toLowerCase().includes(q);
       return statusOk && matchesQuery;
     });
   }, [reports, statusFilter, query]);
@@ -154,14 +169,52 @@ export default function AdminPage() {
     return { total, pendingCount, finishedCount, rejectedCount };
   }, [reports]);
 
-  const handleDecision = (action: "delete" | "reject") => {
+  const showToast = (message: string) => {
+    setToast(message);
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2500);
+  };
+
+  const handleDecision = async (action: "delete" | "reject") => {
     if (!selected) return;
-    const msgMap = {
-      delete: `ลบโพสต์ "${selected.work.title}" ออกจากระบบแล้ว`,
-      reject: `ปฏิเสธรายงาน ${selected.id} และปล่อยโพสต์ไว้`,
-    };
-    setToast(msgMap[action]);
-    setTimeout(() => setToast(null), 2500);
+    const workId = selected.work.workId;
+    const confirmMessage =
+      action === "delete"
+        ? `ยืนยันการลบโพสต์ "${selected.work.title}" ออกจากระบบหรือไม่?`
+        : `ยืนยันการปฏิเสธรายงาน ${selected.id} หรือไม่?`;
+    if (!window.confirm(confirmMessage)) return;
+    const defaultNote = action === "delete" ? "ลบโพสต์ออกจากระบบ" : "รายงานไม่เข้าเงื่อนไข";
+    const noteInput = window.prompt("บันทึกเพิ่มเติม (ไม่บังคับ)", defaultNote) ?? "";
+    setDecisionBusy(true);
+    try {
+      const tasks: Promise<unknown>[] = [];
+      tasks.push(
+        supabaseUpdate("Report", { id: `eq.${selected.id}` }, { status: action === "delete" ? "finished" : "rejected" }),
+      );
+      if (action === "delete") {
+        tasks.push(
+          supabaseUpdate("Work", { workId: `eq.${workId}` }, { status: "removed", updatedAt: new Date().toISOString() }),
+        );
+      }
+      await Promise.all(tasks);
+      await supabaseInsert("ReviewAction", {
+        reportId: selected.id,
+        actedBy: user?.id ?? null,
+        decision: action === "delete" ? "ลบโพสต์" : "ปฏิเสธรายงาน",
+        note: noteInput.trim() || null,
+        actedAt: new Date().toISOString(),
+      });
+      showToast(
+        action === "delete"
+          ? `ลบโพสต์ "${selected.work.title}" แล้ว`
+          : `ปฏิเสธรายงาน ${selected.id} แล้ว`,
+      );
+      setRefreshKey((key) => key + 1);
+    } catch (err: any) {
+      showToast(err?.message || "เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } finally {
+      setDecisionBusy(false);
+    }
   };
 
   const handleViewPost = () => {
@@ -170,59 +223,64 @@ export default function AdminPage() {
     window.open(url, "_blank");
   };
 
+  const handleRefresh = () => setRefreshKey((key) => key + 1);
+
   return (
     <div className="admin-app">
       <Navbar />
       <main className="admin-shell">
-        <section className="admin-headline">
-          <div>
-            <p className="eyebrow">Moderation</p>
-            <h1>Report Center</h1>
-            <p>ติดตามการรายงานผลงานและดำเนินการได้อย่างรวดเร็วภายในศูนย์เดียว</p>
+        <section className="admin-hero">
+          <div className="hero-copy">
+            <p className="eyebrow">Trust &amp; Safety</p>
+            <h1>Report Command Center</h1>
+            <p>ติดตาม สางงาน และสื่อสารกับผู้แจ้งให้ครบวงจรในที่เดียว</p>
           </div>
-          <div className="headline-actions">
-            <button className="ghost-btn" onClick={() => setToast("ฟีเจอร์ Export CSV กำลังพัฒนา")}>
+          <div className="hero-actions">
+            <button className="ghost-btn" type="button" onClick={handleRefresh}>
+              รีเฟรช
+            </button>
+            <button className="ghost-btn" type="button" onClick={() => showToast("ฟีเจอร์ Export CSV กำลังพัฒนา")}>
               Export CSV
             </button>
           </div>
         </section>
 
-        <section className="metric-grid">
-          <div className="metric-card">
-            <span>รายงานทั้งหมด</span>
+        <section className="stat-deck">
+          <div className="stat-card primary">
+            <p>รายงานทั้งหมด</p>
             <strong>{metrics.total}</strong>
-            <small>{metrics.pendingCount} รายการรอดำเนินการ</small>
+            <span>{metrics.pendingCount} รายการรอจัดการ</span>
           </div>
-          <div className="metric-card metric-card--accent">
-            <span>Pending</span>
+          <div className="stat-card">
+            <p>Pending</p>
             <strong>{metrics.pendingCount}</strong>
-            <small>ยังไม่ได้จัดการ</small>
+            <span>ยังไม่ตัดสิน</span>
           </div>
-          <div className="metric-card">
-            <span>Finished</span>
+          <div className="stat-card">
+            <p>Finished</p>
             <strong>{metrics.finishedCount}</strong>
-            <small>ลบ/ระงับโพสต์แล้ว</small>
+            <span>ลบ/ระงับโพสต์แล้ว</span>
           </div>
-          <div className="metric-card">
-            <span>Rejected</span>
+          <div className="stat-card">
+            <p>Rejected</p>
             <strong>{metrics.rejectedCount}</strong>
-            <small>ยกเลิกรายงาน</small>
+            <span>ปล่อยให้เผยแพร่ต่อ</span>
           </div>
         </section>
 
-        <section className="report-panel">
-          <div className="report-filters">
-            <div className="status-tabs">
-              {["all", "pending", "finished", "rejected"].map((status) => (
-                <button
-                  key={status}
-                  className={`status-chip ${statusFilter === status ? "is-active" : ""}`}
-                  onClick={() => setStatusFilter(status as ReportStatus | "all")}
-                >
-                  {status === "all" ? "ทั้งหมด" : STATUS_LABEL[status as ReportStatus].label}
-                </button>
-              ))}
-            </div>
+        <section className="board-controls">
+          <div className="status-filter">
+            {["all", "pending", "finished", "rejected"].map((status) => (
+              <button
+                key={status}
+                className={`status-chip ${statusFilter === status ? "is-active" : ""}`}
+                onClick={() => setStatusFilter(status as ReportStatus | "all")}
+              >
+                {status === "all" ? "ทั้งหมด" : STATUS_LABEL[status as ReportStatus].label}
+              </button>
+            ))}
+          </div>
+          <div className="controls-right">
             <div className="search-box">
               <FiSearch />
               <input
@@ -232,33 +290,48 @@ export default function AdminPage() {
               />
             </div>
           </div>
-          {toast && (
-            <div className="admin-toast">
-              <FiCheckCircle />
-              <span>{toast}</span>
-            </div>
-          )}
-          <div className="reports-layout">
-            <div className="report-table-card">
-              <div className="report-table-head">
-                <div>
-                  <h2>รายการรายงาน</h2>
-                  <p>{filtered.length} รายการที่แสดงผล</p>
-                </div>
+        </section>
+
+        {error && (
+          <div className="admin-toast admin-toast--error">
+            <FiAlertTriangle />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {toast && (
+          <div className="admin-toast">
+            <FiCheckCircle />
+            <span>{toast}</span>
+          </div>
+        )}
+
+        <section className="admin-board">
+          <div className="board-card">
+            <div className="board-head">
+              <div>
+                <p className="eyebrow">รายการรายงาน</p>
+                <h2>Inbox</h2>
               </div>
-              <div className="table-scroll">
-                <table className="report-table">
-                  <thead>
-                    <tr>
-                      <th>งานที่ถูกแจ้ง</th>
-                      <th>ผู้แจ้ง</th>
-                      <th>เหตุผล</th>
-                      <th>สถานะ</th>
-                      <th>แจ้งเมื่อ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((report) => (
+              <span className="table-meta">
+                {loadingReports ? "กำลังโหลด..." : `${filtered.length} รายการ`}
+              </span>
+            </div>
+            <div className="table-scroll">
+              <table className="report-table">
+                <thead>
+                  <tr>
+                    <th>งานที่ถูกแจ้ง</th>
+                    <th>ผู้แจ้ง</th>
+                    <th>เหตุผล</th>
+                    <th>สถานะ</th>
+                    <th>แจ้งเมื่อ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((report) => {
+                    const thumb = report.work.thumbnail || REPORT_PLACEHOLDER_THUMB;
+                    return (
                       <tr
                         key={report.id}
                         className={`row-clickable ${selectedId === report.id ? "row-selected" : ""}`}
@@ -266,7 +339,7 @@ export default function AdminPage() {
                       >
                         <td>
                           <div className="work-cell">
-                            <img src={report.work.thumbnail} alt={report.work.title} />
+                            <img src={thumb} alt={report.work.title} />
                             <div>
                               <p className="work-title">{report.work.title}</p>
                               <span>#{report.work.workId}</span>
@@ -276,7 +349,7 @@ export default function AdminPage() {
                         <td>
                           <div className="reporter-cell">
                             <p>{report.reporter.name}</p>
-                            <span>{report.reporter.email}</span>
+                            <span>{report.reporter.email || "—"}</span>
                           </div>
                         </td>
                         <td>
@@ -293,82 +366,185 @@ export default function AdminPage() {
                         </td>
                         <td>{formatDate(report.reportedAt)}</td>
                       </tr>
-                    ))}
-                    {filtered.length === 0 && (
-                      <tr>
-                        <td colSpan={5}>
-                          <div className="empty-state">
-                            <FiFlag />
-                            <p>ยังไม่มีรายงานตามเงื่อนไขนี้</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <aside className="report-detail-pane">
-              {selected ? (
-                <>
-                  <div className="detail-header">
-                    <p className="eyebrow">รายละเอียดรายงาน</p>
-                    <h3>{selected.work.title}</h3>
-                    <span className="work-meta">#{selected.work.workId} • โดย {selected.work.author.name}</span>
-                  </div>
-                  <div className="detail-section">
-                    <h4>ข้อมูลการรายงาน</h4>
-                    <ul>
-                      <li>
-                        <span>ผู้แจ้ง</span>
-                        <strong>{selected.reporter.name}</strong>
-                        <small>{selected.reporter.email}</small>
-                      </li>
-                      <li>
-                        <span>เหตุผล</span>
-                        <strong>{selected.reason}</strong>
-                        <small>{selected.details}</small>
-                      </li>
-                      <li>
-                        <span>เวลา</span>
-                        <strong>{formatDate(selected.reportedAt)}</strong>
-                      </li>
-                    </ul>
-                  </div>
-                  {selected.reviewAction && (
-                    <div className="detail-section">
-                      <h4>บันทึกการดำเนินการ</h4>
-                      <p className="decision-label">{selected.reviewAction.decision}</p>
-                      <p className="decision-note">{selected.reviewAction.note}</p>
-                      <small>
-                        ดำเนินการโดย {selected.reviewAction.actedBy} • {formatDate(selected.reviewAction.actedAt)}
-                      </small>
-                    </div>
+                    );
+                  })}
+                  {!loadingReports && filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className="empty-state">
+                          <FiFlag />
+                          <p>ยังไม่มีรายงานตามเงื่อนไขนี้</p>
+                        </div>
+                      </td>
+                    </tr>
                   )}
-                  <div className="detail-actions">
-                    <button className="ghost-btn" type="button" onClick={() => handleDecision("reject")}>
-                      ปฏิเสธการรายงาน
-                    </button>
-                    <button className="primary-btn" type="button" onClick={() => handleDecision("delete")}>
-                      ลบโพสต์
-                    </button>
-                    <button className="outline-btn" type="button" onClick={handleViewPost}>
-                      ดูโพสต์
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="empty-pane">
-                  <FiSearch />
-                  <p>เลือกหนึ่งรายการทางซ้ายเพื่อดูรายละเอียด</p>
-                </div>
-              )}
-            </aside>
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          <aside className="board-detail">
+            {selected ? (
+              <>
+                <header className="detail-header">
+                  <p className="eyebrow">รายละเอียด</p>
+                  <h3>{selected.work.title}</h3>
+                  <span className="work-meta">#{selected.work.workId} • โดย {selected.work.author.name}</span>
+                </header>
+                <div className="detail-section">
+                  <h4>ผู้แจ้ง</h4>
+                  <p className="detail-value">{selected.reporter.name}</p>
+                  <span className="detail-muted">{selected.reporter.email || "—"}</span>
+                </div>
+                <div className="detail-section">
+                  <h4>เหตุผล</h4>
+                  <p className="detail-value">{selected.reason}</p>
+                  <span className="detail-muted">{selected.details || "ไม่มีรายละเอียดเพิ่มเติม"}</span>
+                </div>
+                <div className="detail-section">
+                  <h4>เวลา</h4>
+                  <p className="detail-value">{formatDate(selected.reportedAt)}</p>
+                </div>
+                {selected.reviewAction && (
+                  <div className="detail-section">
+                    <h4>บันทึกการดำเนินการ</h4>
+                    <p className="detail-value">{selected.reviewAction.decision}</p>
+                    <span className="detail-muted">{selected.reviewAction.note || "—"}</span>
+                    <small>
+                      ดำเนินการโดย {selected.reviewAction.actedBy || "—"} • {formatDate(selected.reviewAction.actedAt)}
+                    </small>
+                  </div>
+                )}
+                <div className="detail-actions">
+                  <button className="ghost-btn" type="button" onClick={() => handleDecision("reject")} disabled={decisionBusy}>
+                    ปฏิเสธรายงาน
+                  </button>
+                  <button className="primary-btn" type="button" onClick={() => handleDecision("delete")} disabled={decisionBusy}>
+                    ลบโพสต์
+                  </button>
+                  <button className="outline-btn" type="button" onClick={handleViewPost} disabled={decisionBusy}>
+                    ดูโพสต์
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="empty-pane">
+                <FiSearch />
+                <p>เลือกหนึ่งรายการทางซ้ายเพื่อดูรายละเอียด</p>
+              </div>
+            )}
+          </aside>
         </section>
       </main>
       <Footer />
     </div>
   );
+}
+
+async function hydrateReports(rows: ReportRow[], signal?: AbortSignal): Promise<ReportRecord[]> {
+  if (!rows.length) return [];
+  const workIds = rows.map((row) => row.workId).filter(Boolean);
+  const works = await fetchByIds<WorkRow>("Work", "workId", workIds, "workId,title,authorId,Media(fileurl)", { signal });
+  const workMap = new Map(works.map((work) => [work.workId, work]));
+
+  const authorIds = works.map((work) => work.authorId).filter(Boolean) as string[];
+  const reporterIds = rows.map((row) => row.reporterId).filter(Boolean) as string[];
+  const userIds = Array.from(new Set([...authorIds, ...reporterIds]));
+
+  const profiles = await fetchByIds<ProfileRow>("Profile", "userID", userIds, "userID,displayName,contact", { signal });
+  const profileMap = new Map(profiles.map((profile) => [profile.userID, profile]));
+
+  const users = await fetchByIds<UserRow>("users", "id", userIds, "id,full_name,email", { signal });
+  const userMap = new Map(users.map((item) => [item.id, item]));
+
+  const reviewRows = await fetchByIds<ReviewActionRow>(
+    "ReviewAction",
+    "reportId",
+    rows.map((row) => row.id),
+    "id,reportId,decision,note,actedBy,actedAt",
+    { order: "actedAt.desc.nullslast", signal },
+  );
+  const reviewMap = new Map<string, ReviewActionRow>();
+  reviewRows.forEach((action) => {
+    if (!reviewMap.has(action.reportId)) {
+      reviewMap.set(action.reportId, action);
+    }
+  });
+
+  return rows.map((row) => {
+    const work = workMap.get(row.workId);
+    const statusValue = (row.status || "pending").toLowerCase();
+    const status: ReportStatus = statusValue === "finished" || statusValue === "rejected" ? (statusValue as ReportStatus) : "pending";
+    const workAuthor = resolvePerson(work?.authorId, profileMap, userMap);
+    const reporter = resolvePerson(row.reporterId, profileMap, userMap);
+    const review = reviewMap.get(row.id);
+
+    return {
+      id: row.id,
+      status,
+      reason: row.reason || "ไม่ระบุเหตุผล",
+      details: row.details || "",
+      reportedAt: row.reportedAt || "",
+      work: {
+        workId: row.workId,
+        title: work?.title || "Untitled work",
+        thumbnail: work?.Media?.[0]?.fileurl || REPORT_PLACEHOLDER_THUMB,
+        author: workAuthor,
+      },
+      reporter,
+      reviewAction: review
+        ? {
+            decision: review.decision || "—",
+            note: review.note || "",
+            actedBy: review.actedBy || "—",
+            actedAt: review.actedAt || "",
+          }
+        : undefined,
+    };
+  });
+}
+
+type FetchByIdsOptions = {
+  order?: string;
+  signal?: AbortSignal;
+};
+
+async function fetchByIds<T>(
+  table: string,
+  column: string,
+  ids: string[],
+  select: string,
+  options: FetchByIdsOptions = {},
+): Promise<T[]> {
+  const unique = Array.from(new Set(ids.filter(Boolean)));
+  if (!unique.length) return [];
+
+  const results: T[] = [];
+  const chunkSize = 40;
+  for (let i = 0; i < unique.length; i += chunkSize) {
+    const chunk = unique.slice(i, i + chunkSize);
+    const filter = `in.(${chunk.map((id) => `"${id}"`).join(",")})`;
+    const searchParams: Record<string, string> = { select, [column]: filter };
+    if (options.order) searchParams.order = options.order;
+    const data = await supabaseRest<T[]>(table, { searchParams, signal: options.signal });
+    if (Array.isArray(data)) results.push(...data);
+  }
+  return results;
+}
+
+function resolvePerson(
+  userId: string | null | undefined,
+  profileMap: Map<string, ProfileRow>,
+  userMap: Map<string, UserRow>,
+) {
+  if (!userId) {
+    return { id: "", name: "ผู้ใช้งานไม่ระบุ", email: "-" };
+  }
+  const profile = profileMap.get(userId);
+  const account = userMap.get(userId);
+  return {
+    id: userId,
+    name: profile?.displayName || account?.full_name || "ไม่ระบุชื่อ",
+    email: account?.email || profile?.contact || "-",
+  };
 }
