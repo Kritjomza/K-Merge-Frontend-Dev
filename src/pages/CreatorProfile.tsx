@@ -4,6 +4,7 @@ import Masonry from "react-masonry-css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { apiGet } from "../lib/api";
+import { supabaseRest } from "../lib/supabase";
 import type { PublicProfile, WorkListItem } from "../lib/api";
 import "./creator-profile.css";
 
@@ -26,6 +27,8 @@ export default function CreatorProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [joinedDate, setJoinedDate] = useState<string | null>(null);
+
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
@@ -34,9 +37,27 @@ export default function CreatorProfile() {
     (async () => {
       try {
         const res = await apiGet<{ profile: PublicProfile | null; works: WorkListItem[] }>(`/works/author/${userId}`);
+
+        // Fetch created_at from users table
+        let createdAt = null;
+        try {
+          const userRows = await supabaseRest<{ created_at: string }[]>("users", {
+            searchParams: {
+              select: "created_at",
+              id: `eq.${userId}`,
+            },
+          });
+          if (userRows && userRows.length > 0) {
+            createdAt = userRows[0].created_at;
+          }
+        } catch (err) {
+          console.error("Failed to fetch user created_at", err);
+        }
+
         if (!cancelled) {
           setProfile(res.profile || null);
           setWorks(res.works || []);
+          setJoinedDate(createdAt || res.profile?.created_at || null);
         }
       } catch (err: any) {
         if (!cancelled) {
@@ -58,8 +79,8 @@ export default function CreatorProfile() {
   const displayName = profile?.displayName || "KMUTT Creator";
   const location = profile?.location || "KMUTT, Thailand";
   const bio = profile?.bio?.trim() || "This creator has not written a bio yet.";
-  const joined = profile?.created_at
-    ? new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date(profile.created_at))
+  const joined = joinedDate
+    ? new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date(joinedDate))
     : null;
   const contactLabel = profile?.contact?.trim() || "";
   const contactHref = useMemo(() => {
